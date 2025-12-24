@@ -6,7 +6,7 @@
 **TKF** — Transport et Courrier Interurbain Mali
 
 ### 1.2. Objectif du projet
-Concevoir et développer une solution numérique permettant de gérer efficacement les opérations de transport interurbain de la société TKF, reliant plusieurs villes du Mali. L'application doit couvrir la gestion des véhicules, la vente de tickets, le suivi des recettes, la gestion du personnel, ainsi que la gestion des courriers.
+Concevoir et développer une solution numérique permettant de gérer efficacement les opérations de transport interurbain de la société TKF. L'application doit couvrir la gestion des véhicules, la vente de tickets, le suivi des recettes, la gestion du personnel, ainsi que la gestion des courriers (colis).
 
 ### 1.3. Objectifs spécifiques
 - ✅ Centraliser toutes les opérations (réservations, trajets, paiements, courriers)
@@ -60,28 +60,33 @@ Concevoir et développer une solution numérique permettant de gérer efficaceme
 
 ### 2.3. Gestion du Personnel
 #### Types d'employés
-- **Chauffeurs** : Conduite véhicules
-- **Receveurs** : Vente tickets, accueil passagers
-- **Guichetiers** : Vente tickets, gestion caisses
-- **Contrôleurs** : Validation tickets
-- **Agents Courrier** : Gestion parcels/colis
-- **Administrateurs** : Configuration système
+- **Chauffeurs** : Conduite véhicules, gestion trajets
+- **Receveurs** : Vente tickets, accueil passagers en bord de route
+- **Guichetiers** : Vente tickets, gestion caisses, reportages financiers
+- **Contrôleurs** : Validation tickets, contrôle des passagers
+- **Agents Courrier** : Gestion parcels/colis, suivi tracking
+- **Administrateurs** : Configuration système, gestion utilisateurs, rapports
 
 #### Fonctionnalités
-- Enregistrement du personnel
-- Attribution des rôles et permissions
-- Suivi des salaires (base + primes)
-- Historique des trajets effectués
-- Gestion des congés
-- Évaluation de performance
+- Enregistrement complet du personnel avec document d'identité
+- Attribution des rôles et permissions granulaires
+- Gestion des salaires (base + primes performance + commissions)
+- Historique détaillé des trajets effectués par employé
+- Gestion des congés et absences avec validation hiérarchique
+- Évaluation de performance et KPIs par employé
+- Affectation dynamique aux trajets et véhicules
+- Gestion des documents (permis, certifications, assurances)
 
 #### Données à capturer
-- Nom / Prénom
-- Email / Téléphone
-- Fonction/Rôle
-- Date d'embauche
-- Salaire mensuel
-- Document d'identité
+- Identité complète (Nom / Prénom / Date naissance)
+- Email / Téléphone / Adresse
+- Fonction/Rôle (type d'employé)
+- Date d'embauche / Contrat type
+- Salaire mensuel de base
+- Primes et commissions applicables
+- Document d'identité (scan)
+- Historique trajets avec dates et revenus générés
+- Statut (Actif, Congé, Suspendu, Retraité)
 
 ---
 
