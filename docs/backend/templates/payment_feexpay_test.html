@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paiement FeexPay - RUMO RUSH</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .payment-container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .payment-info { 
+            margin-bottom: 20px; 
+            padding: 15px; 
+            background: #e7f3ff; 
+            border-radius: 5px; 
+        }
+        #feexpay-button { 
+            width: 100%; 
+            padding: 15px; 
+            margin-top: 20px; 
+        }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .loading { text-align: center; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <h1>🎮 Paiement RUMO RUSH</h1>
+        
+        <div class="payment-info">
+            <h3>Détails du paiement</h3>
+            <p><strong>Montant:</strong> <span id="amount">500</span> FCFA</p>
+            <p><strong>Méthode:</strong> <span id="method">Mobile Money</span></p>
+            <p><strong>Mode:</strong> <span id="mode">LIVE</span> ✅</p>
+        </div>
+        
+        <div id="status-container"></div>
+        <div id="render"></div>
+        
+        <div class="loading">
+            <p>🔄 Chargement du module de paiement FeexPay...</p>
+            <p><small>En mode LIVE - Les confirmations SMS seront envoyées sur votre numéro</small></p>
+        </div>
+    </div>
+
+    <!-- SDK FeexPay officiel avec fallback -->
+    <script>
+        // Fonction pour charger le SDK FeexPay de manière robuste
+        function loadFeexPaySDK() {
+            return new Promise((resolve, reject) => {
+                // Essayer différentes URLs du SDK
+                const sdkUrls = [
+                    'https://api.feexpay.me/feexpay-javascript-sdk/index.js',
+                    'https://feexpay.me/sdk/feexpay-sdk.js',
+                    'https://cdn.feexpay.me/sdk/latest/feexpay.min.js'
+                ];
+                
+                let currentIndex = 0;
+                
+                function tryLoadSDK(url) {
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.async = true;
+                    
+                    script.onload = function() {
+                        console.log(`✅ SDK FeexPay chargé depuis: ${url}`);
+                        // Attendre un peu que le SDK s'initialise
+                        setTimeout(() => {
+                            if (typeof FeexPayButton !== 'undefined') {
+                                resolve();
+                            } else {
+                                console.warn(`SDK chargé mais FeexPayButton non disponible depuis: ${url}`);
+                                tryNext();
+                            }
+                        }, 1000);
+                    };
+                    
+                    script.onerror = function() {
+                        console.warn(`❌ Échec de chargement du SDK depuis: ${url}`);
+                        tryNext();
+                    };
+                    
+                    document.head.appendChild(script);
+                }
+                
+                function tryNext() {
+                    currentIndex++;
+                    if (currentIndex < sdkUrls.length) {
+                        tryLoadSDK(sdkUrls[currentIndex]);
+                    } else {
+                        reject(new Error('Impossible de charger le SDK FeexPay depuis toutes les URLs'));
+                    }
+                }
+                
+                // Commencer le chargement
+                tryLoadSDK(sdkUrls[0]);
+            });
+        }
+        
+        // Fallback : Simulation si le SDK ne se charge pas
+        function createFallbackPayment() {
+            console.log("🔄 Utilisation du fallback FeexPay");
+            
+            document.getElementById('render').innerHTML = `
+                <div style="border: 2px dashed #007bff; padding: 20px; border-radius: 10px; text-align: center; background: #f8f9fa;">
+                    <h3>💡 Mode de Test FeexPay</h3>
+                    <p><strong>Configuration LIVE détectée :</strong></p>
+                    <ul style="text-align: left; display: inline-block;">
+                        <li>Shop ID: 67d68239474b2509dcde6d10</li>
+                        <li>Mode: LIVE ✅</li>
+                        <li>Montant: 500 FCFA</li>
+                    </ul>
+                    
+                    <button onclick="simulateFeexPayment()" style="
+                        background: #28a745; 
+                        color: white; 
+                        border: none; 
+                        padding: 15px 30px; 
+                        border-radius: 5px; 
+                        font-size: 16px; 
+                        cursor: pointer;
+                        margin-top: 15px;
+                    ">
+                        🚀 Simuler Paiement FeexPay LIVE
+                    </button>
+                    
+                    <p style="margin-top: 15px; font-size: 14px; color: #666;">
+                        <strong>Note:</strong> En mode réel, vous recevrez un SMS de confirmation.<br>
+                        Le SDK officiel sera intégré automatiquement dans votre frontend.
+                    </p>
+                </div>
+            `;
+        }
+        
+        // Fonction de simulation de paiement
+        function simulateFeexPayment() {
+            const statusContainer = document.getElementById('status-container');
+            const customId = "RUMO_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+            
+            statusContainer.innerHTML = `
+                <div class="status" style="background: #fff3cd; color: #856404;">
+                    <h4>🔄 Paiement FeexPay en cours...</h4>
+                    <p><strong>Référence:</strong> ${customId}</p>
+                    <p><strong>Mode:</strong> LIVE</p>
+                    <p><strong>Montant:</strong> 500 FCFA</p>
+                    <p>📱 <strong>En mode réel, vous recevriez maintenant un SMS sur votre numéro MTN pour confirmer le paiement.</strong></p>
+                    
+                    <div style="margin-top: 15px; padding: 10px; background: #e7f3ff; border-radius: 5px;">
+                        <p><strong>🎯 Prochaines étapes pour l'intégration complète :</strong></p>
+                        <ol style="text-align: left;">
+                            <li>Valider votre compte FeexPay (KYC)</li>
+                            <li>Configurer les webhooks FeexPay</li>
+                            <li>Intégrer le SDK dans votre frontend React</li>
+                            <li>Tester avec de vrais numéros de téléphone</li>
+                        </ol>
+                    </div>
+                </div>
+            `;
+            
+            // Simulation d'un webhook callback après 3 secondes
+            setTimeout(() => {
+                statusContainer.innerHTML += `
+                    <div class="status success" style="margin-top: 10px;">
+                        <h4>✅ Simulation de succès</h4>
+                        <p>En mode réel, votre compte serait crédité automatiquement.</p>
+                        <p><strong>Référence:</strong> ${customId}</p>
+                    </div>
+                `;
+            }, 3000);
+        }
+    </script>
+    
+    <script>
+        // Configuration du paiement FeexPay avec vos vraies clés
+        const paymentConfig = {
+            // Vos vraies informations FeexPay
+            id: "67d68239474b2509dcde6d10",  // Votre Shop ID
+            token: "fp_zcQUI4ljedD7HTQyJToo9pOGEHErtGRysTsVrca6ll7WzgY2sFMnq5FHloJPzGl2", // Votre API Key
+            
+            // Paramètres du paiement
+            amount: 500,  // 500 FCFA
+            currency: "XOF",
+            mode: "LIVE",  // MODE LIVE pour vrais SMS
+            
+            // Référence unique
+            custom_id: "RUMO_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9),
+            description: "Dépôt RUMO RUSH - Test paiement réel",
+            
+            // Type de paiement (Mobile Money seulement)
+            case: "MOBILE",
+            
+            // Fonction de callback après paiement
+            callback: function(response) {
+                console.log("FeexPay Response:", response);
+                
+                const statusContainer = document.getElementById('status-container');
+                
+                if (response.status === 'SUCCESS' || response.status === 'SUCCESSFUL') {
+                    statusContainer.innerHTML = `
+                        <div class="status success">
+                            <h4>✅ Paiement réussi !</h4>
+                            <p><strong>Référence:</strong> ${response.reference || response.custom_id}</p>
+                            <p><strong>Montant:</strong> ${response.amount || 500} FCFA</p>
+                            <p>Votre compte RUMO RUSH sera crédité dans quelques minutes.</p>
+                        </div>
+                    `;
+                } else if (response.status === 'PENDING') {
+                    statusContainer.innerHTML = `
+                        <div class="status" style="background: #fff3cd; color: #856404;">
+                            <h4>⏳ Paiement en cours...</h4>
+                            <p><strong>Référence:</strong> ${response.reference || response.custom_id}</p>
+                            <p>Veuillez confirmer le paiement sur votre téléphone.</p>
+                            <p><strong>📱 Vérifiez vos SMS pour la confirmation.</strong></p>
+                        </div>
+                    `;
+                } else {
+                    statusContainer.innerHTML = `
+                        <div class="status error">
+                            <h4>❌ Paiement échoué</h4>
+                            <p><strong>Raison:</strong> ${response.message || 'Erreur inconnue'}</p>
+                            <p>Veuillez réessayer ou contacter le support.</p>
+                        </div>
+                    `;
+                }
+            },
+            
+            // URLs de redirection (optionnelles)
+            callback_url: window.location.origin + "/payment/success",
+            error_callback_url: window.location.origin + "/payment/error",
+        };
+
+        // Initialiser FeexPay quand le DOM est prêt
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("🔄 Initialisation de la page de paiement FeexPay...");
+            
+            // Masquer le message de chargement initial
+            document.querySelector('.loading').style.display = 'none';
+            
+            // Essayer de charger le SDK FeexPay
+            loadFeexPaySDK()
+                .then(() => {
+                    console.log("✅ SDK FeexPay chargé avec succès");
+                    
+                    try {
+                        // Initialiser le bouton de paiement FeexPay
+                        FeexPayButton.init("render", paymentConfig);
+                        console.log("✅ FeexPay initialisé avec succès en mode LIVE");
+                        
+                    } catch (error) {
+                        console.error("❌ Erreur lors de l'initialisation FeexPay:", error);
+                        createFallbackPayment();
+                    }
+                })
+                .catch((error) => {
+                    console.warn("⚠️ SDK FeexPay non disponible:", error.message);
+                    console.log("🔄 Basculement vers le mode fallback");
+                    createFallbackPayment();
+                });
+        });
+    </script>
+</body>
+</html>

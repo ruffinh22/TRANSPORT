@@ -1,0 +1,25 @@
+Vérifiez votre adresse email - {{ site_name }}
+=========================================
+
+Salut {{ user.first_name|default:user.username }} ! 👋
+
+Bienvenue dans l'univers de {{ site_name }} ! Nous sommes ravis de vous compter parmi nous.
+
+Pour commencer à jouer et accéder à toutes les fonctionnalités, vous devez d'abord vérifier votre adresse email en cliquant sur le lien ci-dessous :
+
+{{ verification_link }}
+
+⚠️ IMPORTANT : Ce lien expire dans 24 heures pour des raisons de sécurité.
+
+Une fois votre email vérifié, vous pourrez :
+- 🎯 Participer à des parties passionnantes
+- 💰 Gérer vos gains et retraits
+- 🏆 Accéder aux tournois exclusifs
+- 👥 Inviter vos amis et gagner des bonus
+
+Si vous n'avez pas créé de compte sur {{ site_name }}, ignorez simplement cet email.
+
+Besoin d'aide ? Contactez-nous à {{ support_email }}
+
+© 2024 {{ site_name }}. Tous droits réservés.
+Cet email a été envoyé à {{ user.email }}

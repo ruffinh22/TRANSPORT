@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test FeexPay SDK JavaScript</title>
+    <!-- SDK JavaScript officiel FeexPay -->
+    <script src="https://api.feexpay.me/feexpay-javascript-sdk/index.js"></script>
+</head>
+<body>
+    <div style="padding: 20px; font-family: Arial, sans-serif;">
+        <h2>🧪 Test SDK JavaScript FeexPay</h2>
+        <p><strong>Shop ID:</strong> 67d68239474b2509dcde6d10</p>
+        <p><strong>Mode:</strong> LIVE</p>
+        <p><strong>Montant:</strong> 500 FCFA</p>
+        
+        <!-- Zone où le bouton FeexPay apparaîtra -->
+        <div id="render"></div>
+        
+        <div style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+            <h3>📋 Résultat du test:</h3>
+            <pre id="result">En attente du test...</pre>
+        </div>
+    </div>
+
+    <script>
+        // Attendre que le DOM et le SDK soient chargés
+        function initFeexPay() {
+            console.log("🔍 Vérification disponibilité FeexPayButton...");
+            
+            if (typeof FeexPayButton === 'undefined') {
+                document.getElementById('result').textContent = "❌ ERREUR: SDK FeexPay non chargé !\nVérifiez votre connexion internet.";
+                console.error("❌ FeexPayButton non disponible");
+                return;
+            }
+            
+            console.log("✅ FeexPayButton disponible, initialisation...");
+            document.getElementById('result').textContent = "🔄 Initialisation du SDK FeexPay...";
+            
+            try {
+                // Initialisation du bouton FeexPay selon la documentation officielle
+                FeexPayButton.init("render", {
+                    // ID de votre boutique FeexPay
+                    id: "67d68239474b2509dcde6d10",
+                    
+                    // Montant de la transaction en XOF
+                    amount: 500,
+                    
+                    // Token API sécurisé (VOTRE VRAI TOKEN)
+                    token: "fp_zcQUI4ljedD7HTQyJToo9pOGEHErtGRysTsVrca6ll7WzgY2sFMnq5FHloJPzGl2",
+                    
+                    // Fonction de rappel après le paiement
+                    callback: (response) => {
+                        console.log("🎉 Réponse FeexPay:", response);
+                        document.getElementById('result').textContent = JSON.stringify(response, null, 2);
+                        
+                        // Si succès, afficher message
+                        if (response.status === 'SUCCESSFUL') {
+                            alert('✅ Paiement réussi ! SMS reçu ?');
+                        } else if (response.status === 'FAILED') {
+                            alert('❌ Paiement échoué: ' + (response.reason || 'Erreur inconnue'));
+                        } else {
+                            alert('⏳ Paiement en cours...');
+                        }
+                    },
+                    
+                    // Mode LIVE pour production
+                    mode: "LIVE",
+                    
+                    // Référence personnalisée
+                    custom_id: "test-js-sdk-" + Date.now(),
+                    
+                    // Description de la transaction
+                    description: "Test SDK JavaScript FeexPay",
+                    
+                    // Type de paiement : MOBILE seulement pour forcer mobile money
+                    case: "MOBILE"
+                });
+                
+                console.log("🚀 SDK JavaScript FeexPay initialisé avec succès");
+                document.getElementById('result').textContent = "✅ SDK initialisé ! Le bouton devrait apparaître ci-dessus.";
+                
+            } catch (error) {
+                console.error("❌ Erreur initialisation FeexPay:", error);
+                document.getElementById('result').textContent = "❌ ERREUR: " + error.message;
+            }
+        }
+        
+        // Différentes méthodes pour s'assurer que tout est chargé
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initFeexPay);
+        } else {
+            // Attendre un peu que le SDK se charge
+            setTimeout(initFeexPay, 1000);
+        }
+        
+        // Backup si le SDK prend du temps à charger
+        window.addEventListener('load', function() {
+            setTimeout(initFeexPay, 2000);
+        });
+        
+        console.log("📋 Script de test FeexPay chargé");
+    </script>
+</body>
+</html>

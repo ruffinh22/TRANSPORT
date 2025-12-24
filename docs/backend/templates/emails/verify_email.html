@@ -1,0 +1,399 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Confirmation de votre inscription - {{ site_name }}</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <style type="text/css">
+        /* Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, table, td {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            outline: none;
+            text-decoration: none;
+        }
+        
+        /* Main Styles */
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            height: 100% !important;
+            line-height: 1.6;
+        }
+        
+        .email-wrapper {
+            background-color: #f8f9fa;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+        }
+        
+        /* Header */
+        .email-header {
+            background: linear-gradient(135deg, #3D2817 0%, #3D2817 100%);
+            padding: 40px 40px 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .company-logo {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        
+        .company-tagline {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Content */
+        .email-content {
+            padding: 50px 40px;
+            color: #333333;
+        }
+        
+        .content-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #3D2817;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .greeting {
+            font-size: 16px;
+            color: #333333;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+        
+        .content-text {
+            font-size: 16px;
+            color: #555555;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+        
+        /* Button */
+        .button-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .verify-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #3D2817 0%, #3D2817 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 16px 40px;
+            border-radius: 8px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 16px rgba(30, 60, 114, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .verify-button:hover {
+            box-shadow: 0 6px 20px rgba(30, 60, 114, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        /* Alert Box */
+        .alert-box {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffa726;
+            padding: 16px 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+        
+        .alert-title {
+            font-weight: 600;
+            color: #e65100;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        
+        .alert-text {
+            color: #f57c00;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* Link Section */
+        .link-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+            border: 1px solid #e9ecef;
+        }
+        
+        .link-title {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+        
+        .verification-link {
+            word-break: break-all;
+            background-color: #ffffff;
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #495057;
+            line-height: 1.4;
+        }
+        
+        /* Features List */
+        .features-list {
+            margin: 30px 0;
+        }
+        
+        .features-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #3D2817;
+            margin-bottom: 20px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            padding-left: 0;
+        }
+        
+        .feature-bullet {
+            width: 6px;
+            height: 6px;
+            background-color: #3D2817;
+            border-radius: 50%;
+            margin-right: 12px;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+        
+        .feature-text {
+            color: #555555;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        
+        /* Footer */
+        .email-footer {
+            background-color: #f8f9fa;
+            padding: 40px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .footer-text {
+            color: #6c757d;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+        
+        .support-link {
+            color: #1e3c72;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .support-link:hover {
+            text-decoration: underline;
+        }
+        
+        .copyright {
+            color: #adb5bd;
+            font-size: 12px;
+            margin-top: 24px;
+            line-height: 1.5;
+        }
+        
+        .security-note {
+            background-color: #e8f4f8;
+            border-left: 4px solid #17a2b8;
+            padding: 16px 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+        
+        .security-title {
+            font-weight: 600;
+            color: #0c5460;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        
+        .security-text {
+            color: #155464;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* Mobile Responsive */
+        @media only screen and (max-width: 600px) {
+            .email-wrapper {
+                padding: 20px 10px;
+            }
+            
+            .email-content,
+            .email-header,
+            .email-footer {
+                padding-left: 25px;
+                padding-right: 25px;
+            }
+            
+            .content-title {
+                font-size: 20px;
+            }
+            
+            .content-text {
+                font-size: 15px;
+            }
+            
+            .verify-button {
+                padding: 14px 30px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-container">
+            <!-- Header -->
+            <div class="email-header">
+                <div class="company-logo">{{ site_name }}</div>
+                <div class="company-tagline">Plateforme de jeux en ligne</div>
+            </div>
+            
+            <!-- Content -->
+            <div class="email-content">
+                <h1 class="content-title">Confirmez votre inscription</h1>
+                
+                <p class="greeting">Bonjour <strong>{{ user.first_name|default:user.username }}</strong>,</p>
+                
+                <p class="content-text">
+                    Merci de vous être inscrit sur <strong>{{ site_name }}</strong>. Nous sommes ravis de vous accueillir dans notre communauté de joueurs.
+                </p>
+                
+                <p class="content-text">
+                    Pour activer votre compte et accéder à l'ensemble de nos services, veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous :
+                </p>
+                
+                <div class="button-container">
+                    <a href="{{ verification_link }}" class="verify-button">
+                        Vérifier mon compte
+                    </a>
+                </div>
+                
+                <div class="alert-box">
+                    <div class="alert-title">Important</div>
+                    <div class="alert-text">Ce lien de vérification expire dans 24 heures pour des raisons de sécurité.</div>
+                </div>
+                
+                <div class="link-section">
+                    <div class="link-title">Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</div>
+                    <div class="verification-link">{{ verification_link }}</div>
+                </div>
+                
+                <div class="features-list">
+                    <div class="features-title">Une fois votre compte vérifié, vous pourrez :</div>
+                    <div class="feature-item">
+                        <div class="feature-bullet"></div>
+                        <div class="feature-text">Participer à des parties passionnantes et remporter des gains</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-bullet"></div>
+                        <div class="feature-text">Gérer vos dépôts, retraits et historique financier</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-bullet"></div>
+                        <div class="feature-text">Accéder aux tournois exclusifs et compétitions spéciales</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-bullet"></div>
+                        <div class="feature-text">Inviter vos amis et bénéficier de bonus de parrainage</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-bullet"></div>
+                        <div class="feature-text">Profiter d'un support client dédié et personnalisé</div>
+                    </div>
+                </div>
+                
+                <div class="security-note">
+                    <div class="security-title">Note de sécurité</div>
+                    <div class="security-text">Si vous n'avez pas créé de compte sur {{ site_name }}, vous pouvez ignorer cet email en toute sécurité.</div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="email-footer">
+                <p class="footer-text">
+                    Vous avez des questions ? Notre équipe support est là pour vous aider.
+                </p>
+                <p class="footer-text">
+                    Contactez-nous : <a href="mailto:support@rumorush.com" class="support-link">support@rumorush.com</a>
+                </p>
+                
+                <div class="copyright">
+                    <strong>{{ site_name }}</strong> &copy; 2024. Tous droits réservés.<br>
+                    Cet email a été envoyé à <strong>{{ user.email }}</strong><br>
+                    Plateforme de jeux en ligne sécurisée et certifiée
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

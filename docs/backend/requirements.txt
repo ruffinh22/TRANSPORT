@@ -1,0 +1,101 @@
+# RUMO RUSH - Requirements.txt mis à jour
+# =====================================
+
+# Core Django
+Django==4.2.7
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+django-filter
+django-extensions==3.2.3
+
+# Base de données
+psycopg2-binary
+redis==5.0.1
+django-redis==5.4.0
+
+# Authentification et OAuth
+djangorestframework-simplejwt==5.3.0
+django-allauth==0.57.0
+google-auth==2.23.4
+google-auth-oauthlib==1.1.0
+google-auth-httplib2==0.1.1
+
+# WebSockets
+channels==4.0.0
+channels-redis==4.1.0
+daphne==4.0.0
+
+# Tâches asynchrones
+celery==5.3.4
+django-celery-beat==2.5.0
+django-celery-results==2.5.1
+
+# Paiements
+stripe==7.7.0
+
+# Upload de fichiers
+Pillow
+django-storages==1.14.2
+boto3==1.34.0
+
+# Email et notifications
+django-ses==3.5.0
+sendgrid==6.10.0
+mailgun
+premailer==3.10.0
+django-anymail
+
+# Sécurité
+django-ratelimit==4.1.0
+cryptography==41.0.7
+django-environ==0.11.2
+django-otp==1.1.6
+qrcode==7.4.2
+
+# Monitoring et logs
+sentry-sdk==1.38.0
+django-health-check==3.17.0
+
+# Production
+gunicorn==21.2.0
+whitenoise==6.6.0
+
+# Développement
+django-debug-toolbar==4.2.0
+django-silk==5.0.4
+factory-boy==3.3.0
+faker==20.1.0
+
+# Tests
+pytest==7.4.3
+pytest-django==4.7.0
+pytest-cov==4.1.0
+pytest-xdist==3.5.0
+
+# Utilitaires
+python-dateutil==2.8.2
+pytz==2023.3
+requests==2.31.0
+python-decouple==3.8
+
+# Validation et formatage
+validators==0.22.0
+phonenumbers==8.13.25
+django-phonenumber-field==7.3.0
+
+# API et documentation
+drf-spectacular==0.26.5
+# Documentation: drf-yasg fournit Swagger/OpenAPI UI utilisé dans `rumo_rush/urls.py`
+drf-yasg==1.21.8
+
+# Cache et performance
+django-cachalot==2.6.1
+django-compressor==4.4
+
+# Internationalisation
+django-modeltranslation==0.18.11
+
+# Nouvelles dépendances pour Gmail/Google OAuth
+social-auth-app-django==5.4.0
+social-auth-core==4.5.1
+PyJWT==2.8.0
