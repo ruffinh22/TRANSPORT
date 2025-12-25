@@ -54,6 +54,10 @@ const menuItems = [
   { label: 'Rapports', icon: <ReportsIcon />, path: '/reports' },
 ]
 
+const settingsItems = [
+  { label: 'Paramètres', icon: <SettingsIcon />, path: '/settings' },
+]
+
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()

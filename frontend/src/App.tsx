@@ -12,6 +12,7 @@ import { PaymentsPage } from './pages/PaymentsPage'
 import EmployeesPage from './pages/EmployeesPage'
 import { CitiesPage } from './pages/CitiesPage'
 import ReportsPage from './pages/ReportsPage'
+import SettingsPage from './pages/SettingsPage'
 import { LandingPage } from './pages/LandingPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { governmentTheme } from './theme/governmentTheme'
@@ -84,6 +85,14 @@ const AppContent: React.FC = () => {
         element={
           <ProtectedRoute>
             <ReportsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
           </ProtectedRoute>
         }
       />
