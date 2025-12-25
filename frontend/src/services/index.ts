@@ -70,3 +70,30 @@ export const paymentService = {
   get: (id: number) => apiClient.get(`/payments/${id}/`),
   create: (data: any) => apiClient.post('/payments/', data),
 }
+
+export const employeeService = {
+  list: (params?: any) => apiClient.get('/employees/', { params }),
+  get: (id: number) => apiClient.get(`/employees/${id}/`),
+  create: (data: any) => apiClient.post('/employees/', data),
+  update: (id: number, data: any) => apiClient.put(`/employees/${id}/`, data),
+  delete: (id: number) => apiClient.delete(`/employees/${id}/`),
+  getStatistics: () => apiClient.get('/employees/statistics/'),
+  getLeaves: (id: number) => apiClient.get(`/employees/${id}/leaves/`),
+  getPerformance: (id: number) => apiClient.get(`/employees/${id}/performance/`),
+  bulkUpdateStatus: (data: any) => apiClient.post('/employees/bulk_update_status/', data),
+}
+
+export const cityService = {
+  list: (params?: any) => apiClient.get('/cities/', { params }),
+  get: (id: number) => apiClient.get(`/cities/${id}/`),
+  create: (data: any) => apiClient.post('/cities/', data),
+  update: (id: number, data: any) => apiClient.put(`/cities/${id}/`, data),
+  delete: (id: number) => apiClient.delete(`/cities/${id}/`),
+  getStatistics: () => apiClient.get('/cities/statistics/'),
+  getHubs: () => apiClient.get('/cities/hubs/'),
+  getOperational: () => apiClient.get('/cities/operational/'),
+  getByRegion: (region: string) => apiClient.get('/cities/by_region/', { params: { region } }),
+  getGeolocation: () => apiClient.get('/cities/geolocation/'),
+  updateStatistics: (id: number) => apiClient.post(`/cities/${id}/update_statistics/`),
+  updateAllStatistics: () => apiClient.post('/cities/update_all_statistics/'),
+}

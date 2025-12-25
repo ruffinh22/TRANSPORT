@@ -10,6 +10,7 @@ import { TicketsPage } from './pages/TicketsPage'
 import { ParcelsPage } from './pages/ParcelsPage'
 import { PaymentsPage } from './pages/PaymentsPage'
 import EmployeesPage from './pages/EmployeesPage'
+import { CitiesPage } from './pages/CitiesPage'
 import { LandingPage } from './pages/LandingPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { governmentTheme } from './theme/governmentTheme'
@@ -66,6 +67,14 @@ const AppContent: React.FC = () => {
         element={
           <ProtectedRoute>
             <EmployeesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/cities"
+        element={
+          <ProtectedRoute>
+            <CitiesPage />
           </ProtectedRoute>
         }
       />
