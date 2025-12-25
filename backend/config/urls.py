@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/v1/parcels/', include('apps.parcels.urls')),
     path('api/v1/payments/', include('apps.payments.urls')),
     path('api/v1/revenues/', include('apps.revenues.urls')),
+    path('api/v1/reports/', include('apps.reports.urls')),
 ]
 
 # Debug Toolbar
