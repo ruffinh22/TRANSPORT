@@ -27,6 +27,7 @@ import {
   Payment as PaymentsIcon,
   People as EmployeesIcon,
   LocationCity as CitiesIcon,
+  Assessment as ReportsIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material'
@@ -50,6 +51,7 @@ const menuItems = [
   { label: 'Paiements', icon: <PaymentsIcon />, path: '/payments' },
   { label: 'Employés', icon: <EmployeesIcon />, path: '/employees' },
   { label: 'Villes', icon: <CitiesIcon />, path: '/cities' },
+  { label: 'Rapports', icon: <ReportsIcon />, path: '/reports' },
 ]
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
