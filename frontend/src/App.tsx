@@ -14,8 +14,10 @@ import { CitiesPage } from './pages/CitiesPage'
 import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
 import { LandingPage } from './pages/LandingPage'
+import { UserProfilePage } from './pages/UserProfilePage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { governmentTheme } from './theme/governmentTheme'
+import { NotificationProvider } from './services/NotificationService'
 
 const AppContent: React.FC = () => {
   return (
@@ -96,6 +98,14 @@ const AppContent: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <UserProfilePage />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   )
 }
@@ -104,9 +114,11 @@ function App() {
   return (
     <Provider store={store}>
       <ThemeProvider theme={governmentTheme}>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
+        <NotificationProvider>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </NotificationProvider>
       </ThemeProvider>
     </Provider>
   )

@@ -100,3 +100,7 @@ export const cityService = {
 }
 
 export { exportService } from './exportService'
+export { WebSocketService, useWebSocket, useWebSocketNotifications } from './WebSocketService'
+export type { WebSocketMessage } from './WebSocketService'
+export { NotificationProvider, useNotification } from './NotificationService'
+export type { Notification, NotificationType } from './NotificationService'
