@@ -18,3 +18,7 @@ export { ResponsiveGrid, StatsGrid, CardGrid, DetailGrid } from './ResponsiveGri
 export { ResponsiveFilters } from './ResponsiveFilters'
 export { ResponsiveAppBar } from './ResponsiveAppBar'
 export { ResponsiveForm } from './ResponsiveForm'
+
+// Composants Gouvernementaux
+export { GovPageHeader, GovPageWrapper, GovPageFooter } from './GovPageComponents'
+

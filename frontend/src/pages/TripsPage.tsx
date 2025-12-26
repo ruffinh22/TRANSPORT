@@ -18,6 +18,13 @@ import {
   Container,
   Alert,
   CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -26,8 +33,8 @@ import {
   Visibility as ViewIcon,
 } from '@mui/icons-material'
 import { MainLayout } from '../components/MainLayout'
-import { ResponsivePageTemplate, ResponsiveTable, ResponsiveFilters } from '../components'
-import { responsiveStyles } from '../styles/responsiveStyles'
+import { GovPageHeader, GovPageWrapper, GovPageFooter } from '../components'
+import { govStyles } from '../styles/govStyles'
 import { tripService } from '../services'
 
 interface Trip {
@@ -148,113 +155,157 @@ export const TripsPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <ResponsivePageTemplate
-        title="Gestion des Trajets"
-        subtitle="Consultez et gérez l'ensemble de vos trajets"
-        actions={[
-          <Button
-            key="add"
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-          >
-            Nouveau Trajet
-          </Button>,
-        ]}
-      >
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-        <ResponsiveFilters
-          fields={[
-            { name: 'search', label: 'Recherche', value: search, onChange: setSearch },
+      <GovPageWrapper maxWidth="lg">
+        <GovPageHeader
+          title="Gestion des Trajets"
+          icon="🚌"
+          subtitle="Consultez et gérez l'ensemble de vos trajets"
+          actions={[
             {
-              name: 'status',
-              label: 'Statut',
-              value: filterStatus,
-              onChange: setFilterStatus,
-              options: [
-                { label: 'Tous', value: 'all' },
-                { label: 'Planifié', value: 'scheduled' },
-                { label: 'En cours', value: 'ongoing' },
-                { label: 'Terminé', value: 'completed' },
-              ],
+              label: 'Nouveau Trajet',
+              icon: <AddIcon />,
+              onClick: () => handleOpenDialog(),
+              variant: 'primary',
             },
           ]}
-          onApply={() => loadTrips()}
-          onReset={() => {
-            setSearch('')
-            setFilterStatus('all')
-          }}
         />
 
+        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
+        {/* Filtres */}
+        <Paper sx={{ p: 2, mb: 3, ...govStyles.contentCard }}>
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+            <TextField
+              label="Rechercher (ville)"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              sx={{ maxWidth: { md: '300px' } }}
+            />
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel>Statut</InputLabel>
+              <Select
+                label="Statut"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="all">Tous</option>
+                <option value="scheduled">Planifié</option>
+                <option value="ongoing">En cours</option>
+                <option value="completed">Terminé</option>
+              </Select>
+            </FormControl>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setSearch('')
+                setFilterStatus('all')
+                loadTrips()
+              }}
+              sx={govStyles.govButton.secondary}
+            >
+              Réinitialiser
+            </Button>
+          </Stack>
+        </Paper>
+
+        {/* Table */}
         {loading ? (
-          <Box sx={responsiveStyles.flexCenter}>
-            <CircularProgress />
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+            <CircularProgress sx={{ color: govStyles.colors.primary }} />
           </Box>
         ) : (
-          <ResponsiveTable
-            columns={[
-              { key: 'departure_city', label: 'Départ' },
-              { key: 'arrival_city', label: 'Arrivée' },
-              { key: 'departure_date', label: 'Date départ' },
-              { key: 'total_seats', label: 'Sièges' },
-              { key: 'available_seats', label: 'Disponibles' },
-              {
-                key: 'status',
-                label: 'Statut',
-                render: (val) => (
-                  <Chip
-                    label={val}
-                    color={val === 'scheduled' ? 'primary' : val === 'ongoing' ? 'warning' : 'success'}
-                    size="small"
-                  />
-                ),
-              },
-              {
-                key: 'actions',
-                label: 'Actions',
-                render: (_, row) => (
-                  <Stack direction="row" spacing={1}>
-                    <Button
-                      size="small"
-                      variant="text"
-                      onClick={() => handleOpenDialog(row)}
-                    >
-                      ✏️
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="text"
-                      color="error"
-                      onClick={() => handleDelete(row.id)}
-                    >
-                      🗑️
-                    </Button>
-                  </Stack>
-                ),
-              },
-            ]}
-            data={filteredTrips}
-            emptyMessage="Aucun trajet trouvé"
-          />
+          <TableContainer component={Paper} sx={govStyles.contentCard}>
+            <Table sx={govStyles.table}>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: govStyles.colors.primary }}>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Départ</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Arrivée</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Date Départ</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Sièges</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Dispo</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Statut</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredTrips.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} align="center" sx={{ py: 4, color: '#999' }}>
+                      Aucun trajet trouvé
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredTrips.map((trip) => (
+                    <TableRow key={trip.id} sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}>
+                      <TableCell>{trip.departure_city}</TableCell>
+                      <TableCell>{trip.arrival_city}</TableCell>
+                      <TableCell>{new Date(trip.departure_date).toLocaleDateString('fr-FR')}</TableCell>
+                      <TableCell align="center">{trip.total_seats}</TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={trip.available_seats}
+                          color={trip.available_seats === 0 ? 'error' : trip.available_seats < 5 ? 'warning' : 'success'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={trip.status === 'scheduled' ? 'Planifié' : trip.status === 'ongoing' ? 'En cours' : 'Terminé'}
+                          color={trip.status === 'scheduled' ? 'primary' : trip.status === 'ongoing' ? 'warning' : 'success'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Stack direction="row" spacing={0.5} justifyContent="center">
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={() => handleOpenDialog(trip)}
+                            sx={{ color: govStyles.colors.primary }}
+                          >
+                            ✏️
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={() => handleDelete(trip.id)}
+                            sx={{ color: govStyles.colors.danger }}
+                          >
+                            🗑️
+                          </Button>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
 
         {/* Dialog Form */}
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>{editingId ? 'Éditer le trajet' : 'Nouveau trajet'}</DialogTitle>
-          <DialogContent sx={{ pt: 2 }}>
+          <DialogTitle sx={{ backgroundColor: govStyles.colors.primary, color: 'white', fontWeight: 700 }}>
+            {editingId ? '✏️ Éditer le trajet' : '➕ Nouveau trajet'}
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
             <Stack spacing={2}>
               <TextField
                 label="Ville de départ"
                 fullWidth
                 value={formData.departure_city}
                 onChange={(e) => setFormData({ ...formData, departure_city: e.target.value })}
+                variant="outlined"
               />
               <TextField
                 label="Ville d'arrivée"
                 fullWidth
                 value={formData.arrival_city}
                 onChange={(e) => setFormData({ ...formData, arrival_city: e.target.value })}
+                variant="outlined"
               />
               <TextField
                 label="Date de départ"
@@ -288,14 +339,18 @@ export const TripsPage: React.FC = () => {
               />
             </Stack>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenDialog(false)}>Annuler</Button>
-            <Button variant="contained" onClick={handleSave}>
+          <DialogActions sx={{ p: 2, gap: 1 }}>
+            <Button onClick={() => setOpenDialog(false)} sx={govStyles.govButton.secondary}>
+              Annuler
+            </Button>
+            <Button variant="contained" onClick={handleSave} sx={govStyles.govButton.primary}>
               Sauvegarder
             </Button>
           </DialogActions>
         </Dialog>
-      </ResponsivePageTemplate>
+
+        <GovPageFooter text="Système de Gestion du Transport - Gestion des Trajets" />
+      </GovPageWrapper>
     </MainLayout>
   )
 }
