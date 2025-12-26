@@ -28,6 +28,7 @@ import {
   TrendingUp as TrendingIcon,
   DateRange as DateIcon,
   Print as PrintIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material'
 import { MainLayout } from '../components/MainLayout'
 import { tripService, ticketService, parcelService, paymentService, employeeService, cityService } from '../services'
@@ -142,7 +143,15 @@ export const ReportsPage: React.FC = () => {
       <Box sx={{ mb: 4 }}>
         {/* Header */}
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={() => window.history.back()}
+              variant="outlined"
+              size="small"
+            >
+              Retour
+            </Button>
             <ReportIcon sx={{ fontSize: 32, color: '#CE1126' }} />
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#CE1126' }}>
               Rapports et Analyses

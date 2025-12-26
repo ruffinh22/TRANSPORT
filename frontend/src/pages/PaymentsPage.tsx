@@ -29,6 +29,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Receipt as ReceiptIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material'
 import { MainLayout } from '../components/MainLayout'
 import { paymentService } from '../services'
@@ -158,9 +159,19 @@ export const PaymentsPage: React.FC = () => {
   return (
     <MainLayout>
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ mb: 3, fontWeight: 700 }}>
-          Gestion des Paiements
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => window.history.back()}
+            variant="outlined"
+            size="small"
+          >
+            Retour
+          </Button>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            Gestion des Paiements
+          </Typography>
+        </Box>
 
         {/* Stats Cards */}
         <Grid container spacing={2} sx={{ mb: 3 }}>

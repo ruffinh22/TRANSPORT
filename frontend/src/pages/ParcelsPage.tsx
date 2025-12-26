@@ -30,6 +30,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   LocalShipping as TrackIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material'
 import { MainLayout } from '../components/MainLayout'
 import { parcelService } from '../services'
@@ -56,6 +57,7 @@ export const ParcelsPage: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [seedLoading, setSeedLoading] = useState(false)
 
   const [formData, setFormData] = useState({
     trip: 1,
@@ -165,6 +167,19 @@ export const ParcelsPage: React.FC = () => {
     }
   }
 
+  const handleSeedParcels = async () => {
+    setSeedLoading(true)
+    try {
+      await parcelService.seed()
+      loadParcels()
+      alert('✅ Colis générés avec succès!')
+    } catch (error) {
+      console.error('Erreur:', error)
+      alert('❌ Erreur lors de la génération des colis')
+    }
+    setSeedLoading(false)
+  }
+
   const filteredParcels = parcels.filter(parcel =>
     parcel.tracking_number.toLowerCase().includes(search.toLowerCase()) ||
     parcel.sender_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -174,9 +189,19 @@ export const ParcelsPage: React.FC = () => {
   return (
     <MainLayout>
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ mb: 3, fontWeight: 700 }}>
-          Gestion des Colis
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => window.history.back()}
+            variant="outlined"
+            size="small"
+          >
+            Retour
+          </Button>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            Gestion des Colis
+          </Typography>
+        </Box>
 
         {/* Stats Cards */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -261,6 +286,14 @@ export const ParcelsPage: React.FC = () => {
               sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
             >
               Ajouter colis
+            </Button>
+            <Button
+              variant="outlined"
+              color="success"
+              onClick={handleSeedParcels}
+              disabled={seedLoading}
+            >
+              {seedLoading ? '⏳ Génération...' : '🌱 Seed'}
             </Button>
           </Stack>
         </Card>

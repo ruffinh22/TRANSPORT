@@ -38,6 +38,7 @@ import {
   Visibility as VisibilityIcon,
   Download as DownloadIcon,
   Search as SearchIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { api } from '../services/api';
@@ -341,9 +342,19 @@ const EmployeesPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold', color: '#CE1126' }}>
-        ★ Gestion du Personnel TKF
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => window.history.back()}
+          variant="outlined"
+          size="small"
+        >
+          Retour
+        </Button>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#CE1126' }}>
+          ★ Gestion du Personnel TKF
+        </Typography>
+      </Box>
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>

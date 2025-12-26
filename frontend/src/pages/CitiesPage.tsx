@@ -33,6 +33,7 @@ import {
   LocationCity as CityIcon,
   TrendingUp as TrendingIcon,
   Map as MapIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material'
 import { MainLayout } from '../components/MainLayout'
 import { cityService } from '../services'
@@ -206,7 +207,15 @@ export const CitiesPage: React.FC = () => {
       <Box sx={{ mb: 4 }}>
         {/* Header */}
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={() => window.history.back()}
+              variant="outlined"
+              size="small"
+            >
+              Retour
+            </Button>
             <CityIcon sx={{ fontSize: 32, color: '#CE1126' }} />
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#CE1126' }}>
               Gestion des Villes
