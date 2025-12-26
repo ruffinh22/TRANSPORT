@@ -25,11 +25,13 @@ import {
   LocationCity as CitiesIcon,
   Assessment as ReportsIcon,
   Schedule as ScheduleIcon,
+  Download as DownloadIcon,
+  FileDownload as ExcelIcon,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '../hooks'
 import { MainLayout } from '../components/MainLayout'
-import { tripService, ticketService, parcelService, paymentService, employeeService, cityService } from '../services'
+import { tripService, ticketService, parcelService, paymentService, employeeService, cityService, exportService } from '../services'
 
 interface Stats {
   trips: number
@@ -222,12 +224,107 @@ export const Dashboard: React.FC = () => {
       <Box sx={{ mb: 4 }}>
         {/* Header */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" sx={{ mb: 1, fontWeight: 700, color: '#CE1126' }}>
-            🏛️ Portail TKF - Tableau de Bord
-          </Typography>
-          <Typography variant="body1" color="textSecondary" sx={{ mb: 2 }}>
-            Bienvenue, {user?.first_name}! Voici un aperçu complet de vos opérations de transport
-          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: '#CE1126' }}>
+                🏛️ Portail TKF - Tableau de Bord
+              </Typography>
+              <Typography variant="body1" color="textSecondary" sx={{ mt: 1 }}>
+                Bienvenue, {user?.first_name}! Voici un aperçu complet de vos opérations de transport
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                startIcon={<DownloadIcon />}
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  exportService.exportToCSV(
+                    [
+                      {
+                        'Métrique': 'Trajets actifs',
+                        'Valeur': stats.trips,
+                        'Date': new Date().toLocaleDateString('fr-FR'),
+                      },
+                      {
+                        'Métrique': 'Billets vendus',
+                        'Valeur': stats.tickets,
+                        'Date': new Date().toLocaleDateString('fr-FR'),
+                      },
+                      {
+                        'Métrique': 'Colis transportés',
+                        'Valeur': stats.parcels,
+                        'Date': new Date().toLocaleDateString('fr-FR'),
+                      },
+                      {
+                        'Métrique': 'Chiffre d\'affaires',
+                        'Valeur': stats.revenue,
+                        'Date': new Date().toLocaleDateString('fr-FR'),
+                      },
+                      {
+                        'Métrique': 'Employés actifs',
+                        'Valeur': stats.employees,
+                        'Date': new Date().toLocaleDateString('fr-FR'),
+                      },
+                      {
+                        'Métrique': 'Villes desservies',
+                        'Valeur': stats.cities,
+                        'Date': new Date().toLocaleDateString('fr-FR'),
+                      },
+                    ],
+                    `dashboard_${new Date().toISOString().split('T')[0]}.csv`
+                  )
+                }}
+              >
+                CSV
+              </Button>
+              <Button
+                startIcon={<ExcelIcon />}
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  exportService.exportToExcel(
+                    [
+                      {
+                        'Métrique': 'Trajets actifs',
+                        'Valeur': stats.trips,
+                        'Date': new Date().toLocaleDateString('fr-FR'),
+                      },
+                      {
+                        'Métrique': 'Billets vendus',
+                        'Valeur': stats.tickets,
+                        'Date': new Date().toLocaleDateString('fr-FR'),
+                      },
+                      {
+                        'Métrique': 'Colis transportés',
+                        'Valeur': stats.parcels,
+                        'Date': new Date().toLocaleDateString('fr-FR'),
+                      },
+                      {
+                        'Métrique': 'Chiffre d\'affaires',
+                        'Valeur': stats.revenue,
+                        'Date': new Date().toLocaleDateString('fr-FR'),
+                      },
+                      {
+                        'Métrique': 'Employés actifs',
+                        'Valeur': stats.employees,
+                        'Date': new Date().toLocaleDateString('fr-FR'),
+                      },
+                      {
+                        'Métrique': 'Villes desservies',
+                        'Valeur': stats.cities,
+                        'Date': new Date().toLocaleDateString('fr-FR'),
+                      },
+                    ],
+                    `dashboard_${new Date().toISOString().split('T')[0]}.xlsx`,
+                    'Statistiques'
+                  )
+                }}
+              >
+                Excel
+              </Button>
+            </Box>
+          </Box>
           <Divider sx={{ borderColor: '#007A5E' }} />
         </Box>
 

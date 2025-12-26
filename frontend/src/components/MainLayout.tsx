@@ -30,6 +30,7 @@ import {
   Assessment as ReportsIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
+  Home as HomeIcon,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../hooks'
@@ -118,6 +119,22 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               }}
             >
               {mobileOpen ? <CloseIcon /> : <MenuIcon />}
+            </IconButton>
+
+            {/* Bouton Accueil */}
+            <IconButton
+              color="inherit"
+              onClick={() => navigate('/dashboard')}
+              title="Aller à l'Accueil"
+              sx={{
+                mr: 2,
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                },
+              }}
+            >
+              <HomeIcon />
             </IconButton>
 
             <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 700, letterSpacing: '1px' }}>

@@ -63,6 +63,7 @@ export const parcelService = {
   create: (data: any) => apiClient.post('/parcels/', data),
   update: (id: number, data: any) => apiClient.put(`/parcels/${id}/`, data),
   delete: (id: number) => apiClient.delete(`/parcels/${id}/`),
+  seed: () => apiClient.post('/parcels/seed/', {}),
 }
 
 export const paymentService = {
@@ -97,3 +98,5 @@ export const cityService = {
   updateStatistics: (id: number) => apiClient.post(`/cities/${id}/update_statistics/`),
   updateAllStatistics: () => apiClient.post('/cities/update_all_statistics/'),
 }
+
+export { exportService } from './exportService'
