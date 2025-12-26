@@ -3,37 +3,30 @@ import {
   Box,
   Card,
   CardContent,
-  Grid,
+  Container,
   Typography,
   Button,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  Chip,
-  Avatar,
-  Divider,
-  LinearProgress,
-  Container,
+  CircularProgress,
+  Grid,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import {
   TrendingUp as TrendingIcon,
   DirectionsRun as TripsIcon,
   ConfirmationNumber as TicketsIcon,
   LocalShipping as ParcelsIcon,
-  Payment as PaymentsIcon,
   People as EmployeesIcon,
   LocationCity as CitiesIcon,
-  Assessment as ReportsIcon,
-  Schedule as ScheduleIcon,
   Download as DownloadIcon,
-  FileDownload as ExcelIcon,
+  Schedule as ScheduleIcon,
+  BarChart as ReportsIcon,
+  Description as ExcelIcon,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '../hooks'
 import { MainLayout } from '../components/MainLayout'
-import { tripService, ticketService, parcelService, paymentService, employeeService, cityService, exportService } from '../services'
-import { responsiveStyles } from '../styles/responsiveStyles'
+import { tripService, ticketService, parcelService, paymentService, employeeService, cityService } from '../services'
 
 interface Stats {
   trips: number
@@ -43,15 +36,13 @@ interface Stats {
   revenue: number
   employees: number
   cities: number
-  recentTrips: any[]
-  recentPayments: any[]
-  employeeStats: any
-  cityStats: any
 }
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { user } = useAppSelector((state) => state.auth)
+  const theme = useTheme()
+
   const [stats, setStats] = useState<Stats>({
     trips: 0,
     tickets: 0,
@@ -60,11 +51,8 @@ export const Dashboard: React.FC = () => {
     revenue: 0,
     employees: 0,
     cities: 0,
-    recentTrips: [],
-    recentPayments: [],
-    employeeStats: {},
-    cityStats: {},
   })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     loadDashboardData()
@@ -72,502 +60,394 @@ export const Dashboard: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [
-        tripsRes,
-        ticketsRes,
-        parcelsRes,
-        paymentsRes,
-        employeesRes,
-        citiesRes,
-        employeeStatsRes,
-      ] = await Promise.all([
-        tripService.list(),
-        ticketService.list(),
-        parcelService.list(),
-        paymentService.list(),
-        employeeService.list(),
-        cityService.list(),
-        employeeService.getStatistics(),
+      setLoading(true)
+
+      const [tripsRes, ticketsRes, parcelsRes, paymentsRes, employeesRes, citiesRes] = await Promise.all([
+        tripService.list().catch(() => ({ data: [] })),
+        ticketService.list().catch(() => ({ data: [] })),
+        parcelService.list().catch(() => ({ data: [] })),
+        paymentService.list().catch(() => ({ data: [] })),
+        employeeService.list().catch(() => ({ data: [] })),
+        cityService.list().catch(() => ({ data: [] })),
       ])
 
-      const trips = tripsRes.data.results || tripsRes.data || []
-      const tickets = ticketsRes.data.results || ticketsRes.data || []
-      const parcels = parcelsRes.data.results || parcelsRes.data || []
-      const payments = paymentsRes.data.results || paymentsRes.data || []
-      const employees = employeesRes.data.results || employeesRes.data || []
-      const cities = citiesRes.data.results || citiesRes.data || []
+      const getLength = (res: any) => {
+        if (!res || !res.data) return 0
+        if (Array.isArray(res.data)) return res.data.length
+        if (res.data.results) return res.data.results.length
+        return 0
+      }
 
-      const revenue = payments
+      const trips = getLength(tripsRes)
+      const tickets = getLength(ticketsRes)
+      const parcels = getLength(parcelsRes)
+      const payments = getLength(paymentsRes)
+      const employees = getLength(employeesRes)
+      const cities = getLength(citiesRes)
+
+      const getArray = (res: any) => {
+        if (!res || !res.data) return []
+        if (Array.isArray(res.data)) return res.data
+        if (res.data.results) return res.data.results
+        return []
+      }
+
+      const paymentsList = getArray(paymentsRes)
+      const revenue = paymentsList
         .filter((p: any) => p.status === 'completed')
-        .reduce((sum: number, p: any) => sum + p.amount, 0)
+        .reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
 
       setStats({
-        trips: trips.length,
-        tickets: tickets.length,
-        parcels: parcels.length,
-        payments: payments.length,
+        trips,
+        tickets,
+        parcels,
+        payments,
         revenue,
-        employees: employees.length,
-        cities: cities.length,
-        recentTrips: trips.slice(0, 5),
-        recentPayments: payments.slice(0, 5),
-        employeeStats: employeeStatsRes.data || {},
-        cityStats: {},
+        employees,
+        cities,
       })
     } catch (error) {
       console.error('Erreur chargement dashboard:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const StatCard = ({
+  // Composant Carte Stat Gouvernementale
+  const GovStatCard = ({
     title,
     value,
     icon: Icon,
-    gradient,
     onClick,
-    subtitle,
+    color = '#003D66',
   }: {
     title: string
     value: number | string
     icon: any
-    gradient: string
     onClick?: () => void
-    subtitle?: string
+    color?: string
   }) => (
     <Card
       sx={{
-        background: gradient,
-        color: 'white',
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'transform 0.3s, box-shadow 0.3s',
-        '&:hover': onClick ? { transform: 'translateY(-4px)', boxShadow: '0 12px 24px rgba(0,0,0,0.15)' } : {},
+        transition: 'all 0.3s ease',
+        border: `2px solid ${color}`,
+        borderRadius: '8px',
+        backgroundColor: '#ffffff',
+        boxShadow: '0 2px 8px rgba(0, 61, 102, 0.08)',
+        '&:hover': onClick
+          ? {
+              boxShadow: '0 8px 24px rgba(0, 61, 102, 0.15)',
+              transform: 'translateY(-2px)',
+              borderColor: color,
+            }
+          : {},
         position: 'relative',
         overflow: 'hidden',
       }}
       onClick={onClick}
     >
-      <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="overline" sx={{ opacity: 0.9, fontSize: '0.75rem' }}>
-              {title}
-            </Typography>
-            <Typography variant="h3" sx={{ fontWeight: 700, mt: 1, fontSize: '2rem' }}>
-              {typeof value === 'number' ? value.toLocaleString() : value}
-            </Typography>
-            {subtitle && (
-              <Typography variant="caption" sx={{ opacity: 0.8, mt: 0.5 }}>
-                {subtitle}
-              </Typography>
-            )}
-          </Box>
-          <Icon sx={{ fontSize: 40, opacity: 0.7 }} />
-        </Box>
-      </CardContent>
       <Box
         sx={{
           position: 'absolute',
-          bottom: 0,
+          top: 0,
           left: 0,
           right: 0,
           height: '4px',
-          background: 'rgba(255,255,255,0.2)',
+          backgroundColor: color,
         }}
       />
-    </Card>
-  )
 
-  const QuickActionCard = ({
-    title,
-    description,
-    icon: Icon,
-    onClick,
-    color,
-  }: {
-    title: string
-    description: string
-    icon: any
-    onClick: () => void
-    color: string
-  }) => (
-    <Card
-      sx={{
-        cursor: 'pointer',
-        transition: 'all 0.3s',
-        border: `1px solid ${color}20`,
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: `0 8px 16px ${color}30`,
-          borderColor: color,
-        },
-      }}
-      onClick={onClick}
-    >
-      <CardContent sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar sx={{ bgcolor: color, width: 48, height: 48 }}>
-            <Icon />
-          </Avatar>
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+      <CardContent sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                color: '#666',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                mb: 1,
+              }}
+            >
               {title}
             </Typography>
-            <Typography variant="body2" color="textSecondary">
-              {description}
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: color,
+                fontSize: { xs: '1.8rem', md: '2.2rem' },
+              }}
+            >
+              {typeof value === 'number' ? value.toLocaleString('fr-FR') : value}
             </Typography>
+          </Box>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 56,
+              height: 56,
+              borderRadius: '8px',
+              backgroundColor: `${color}10`,
+            }}
+          >
+            <Icon sx={{ fontSize: 28, color: color }} />
           </Box>
         </Box>
       </CardContent>
     </Card>
   )
+
+  // Bouton d'action gouvernemental
+  const GovActionButton = ({
+    label,
+    icon: Icon,
+    onClick,
+    variant = 'primary',
+  }: {
+    label: string
+    icon: any
+    onClick: () => void
+    variant?: 'primary' | 'secondary'
+  }) => (
+    <Button
+      startIcon={<Icon />}
+      onClick={onClick}
+      fullWidth
+      variant="contained"
+      sx={{
+        backgroundColor: variant === 'primary' ? '#003D66' : '#E8E8E8',
+        color: variant === 'primary' ? '#ffffff' : '#003D66',
+        textTransform: 'uppercase',
+        fontWeight: 600,
+        fontSize: '0.875rem',
+        padding: '12px 16px',
+        borderRadius: '6px',
+        border: `2px solid ${variant === 'primary' ? '#003D66' : '#999'}`,
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          backgroundColor: variant === 'primary' ? '#002A47' : '#D3D3D3',
+          boxShadow: '0 4px 12px rgba(0, 61, 102, 0.15)',
+          transform: 'translateY(-1px)',
+        },
+      }}
+    >
+      {label}
+    </Button>
+  )
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <Container maxWidth="lg" sx={{ py: 8, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <CircularProgress sx={{ color: '#003D66', mb: 2 }} />
+            <Typography color="textSecondary">Chargement du tableau de bord...</Typography>
+          </Box>
+        </Container>
+      </MainLayout>
+    )
+  }
 
   return (
     <MainLayout>
       <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
-        {/* Header */}
-        <Box sx={responsiveStyles.headerSection}>
-          <Box sx={responsiveStyles.flexBetween}>
-            <Box>
-              <Typography sx={responsiveStyles.pageTitle}>
-                🏛️ Portail TKF - Tableau de Bord
+        {/* En-tête gouvernemental */}
+        <Box sx={{ mb: 4, borderBottom: '3px solid #003D66', pb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 700,
+                  color: '#003D66',
+                  mb: 0.5,
+                  fontSize: { xs: '1.5rem', md: '2rem' },
+                }}
+              >
+                🏛️ TABLEAU DE BORD TKF
               </Typography>
-              <Typography sx={responsiveStyles.pageSubtitle}>
-                Bienvenue, {user?.first_name}! Voici un aperçu complet de vos opérations de transport
+              <Typography
+                variant="body1"
+                sx={{
+                  color: '#666',
+                  fontSize: '0.95rem',
+                }}
+              >
+                Système de Gestion du Transport - Burkina Faso
               </Typography>
             </Box>
-            <Box sx={responsiveStyles.actionButtons}>
-              <Button
-                startIcon={<DownloadIcon />}
-                variant="outlined"
-                size="small"
-                onClick={() => {
-                  exportService.exportToCSV(
-                    [
-                      {
-                        'Métrique': 'Trajets actifs',
-                        'Valeur': stats.trips,
-                        'Date': new Date().toLocaleDateString('fr-FR'),
-                      },
-                      {
-                        'Métrique': 'Billets vendus',
-                        'Valeur': stats.tickets,
-                        'Date': new Date().toLocaleDateString('fr-FR'),
-                      },
-                      {
-                        'Métrique': 'Colis transportés',
-                        'Valeur': stats.parcels,
-                        'Date': new Date().toLocaleDateString('fr-FR'),
-                      },
-                      {
-                        'Métrique': 'Chiffre d\'affaires',
-                        'Valeur': stats.revenue,
-                        'Date': new Date().toLocaleDateString('fr-FR'),
-                      },
-                      {
-                        'Métrique': 'Employés actifs',
-                        'Valeur': stats.employees,
-                        'Date': new Date().toLocaleDateString('fr-FR'),
-                      },
-                      {
-                        'Métrique': 'Villes desservies',
-                        'Valeur': stats.cities,
-                        'Date': new Date().toLocaleDateString('fr-FR'),
-                      },
-                    ],
-                    `dashboard_${new Date().toISOString().split('T')[0]}.csv`
-                  )
-                }}
-              >
-                CSV
-              </Button>
-              <Button
-                startIcon={<ExcelIcon />}
-                variant="outlined"
-                size="small"
-                onClick={() => {
-                  exportService.exportToExcel(
-                    [
-                      {
-                        'Métrique': 'Trajets actifs',
-                        'Valeur': stats.trips,
-                        'Date': new Date().toLocaleDateString('fr-FR'),
-                      },
-                      {
-                        'Métrique': 'Billets vendus',
-                        'Valeur': stats.tickets,
-                        'Date': new Date().toLocaleDateString('fr-FR'),
-                      },
-                      {
-                        'Métrique': 'Colis transportés',
-                        'Valeur': stats.parcels,
-                        'Date': new Date().toLocaleDateString('fr-FR'),
-                      },
-                      {
-                        'Métrique': 'Chiffre d\'affaires',
-                        'Valeur': stats.revenue,
-                        'Date': new Date().toLocaleDateString('fr-FR'),
-                      },
-                      {
-                        'Métrique': 'Employés actifs',
-                        'Valeur': stats.employees,
-                        'Date': new Date().toLocaleDateString('fr-FR'),
-                      },
-                      {
-                        'Métrique': 'Villes desservies',
-                        'Valeur': stats.cities,
-                        'Date': new Date().toLocaleDateString('fr-FR'),
-                      },
-                    ],
-                    `dashboard_${new Date().toISOString().split('T')[0]}.xlsx`,
-                    'Statistiques'
-                  )
-                }}
-              >
-                Excel
-              </Button>
+            <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' }, width: { xs: '100%', md: 'auto' } }}>
+              <GovActionButton label="Télécharger CSV" icon={DownloadIcon} onClick={() => {}} variant="secondary" />
+              <GovActionButton label="Imprimer" icon={ExcelIcon} onClick={() => {}} />
             </Box>
           </Box>
-          <Divider sx={{ borderColor: '#007A5E' }} />
+          {user && (
+            <Typography variant="body2" sx={{ color: '#007A5E', fontWeight: 500 }}>
+              Bienvenue, <strong>{user.first_name} {user.last_name}</strong> • Connecté depuis le {new Date().toLocaleDateString('fr-FR')}
+            </Typography>
+          )}
         </Box>
 
-        {/* Main Stats Grid */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        {/* Grille Principale de Statistiques */}
+        <Grid container spacing={2.5} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Trajets actifs"
+            <GovStatCard
+              title="Trajets Actifs"
               value={stats.trips}
               icon={TripsIcon}
-              gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
               onClick={() => navigate('/trips')}
-              subtitle="Trajets programmés"
+              color="#003D66"
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Billets vendus"
+            <GovStatCard
+              title="Billets Vendus"
               value={stats.tickets}
               icon={TicketsIcon}
-              gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
               onClick={() => navigate('/tickets')}
-              subtitle="Cette semaine"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Colis transportés"
-              value={stats.parcels}
-              icon={ParcelsIcon}
-              gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
-              onClick={() => navigate('/parcels')}
-              subtitle="En cours"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Employés actifs"
-              value={stats.employees}
-              icon={EmployeesIcon}
-              gradient="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
-              onClick={() => navigate('/employees')}
-              subtitle="Équipe TKF"
-            />
-          </Grid>
-        </Grid>
-
-        {/* Revenue & Cities Row */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={8}>
-            <Card
-              sx={{
-                background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',
-                color: 'white',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Box>
-                    <Typography variant="overline" sx={{ opacity: 0.9 }}>
-                      💰 Chiffre d'affaires (Paiements complétés)
-                    </Typography>
-                    <Typography variant="h3" sx={{ fontWeight: 700, mt: 1 }}>
-                      {stats.revenue.toLocaleString()} CFA
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.8, mt: 1 }}>
-                      +12% par rapport au mois dernier
-                    </Typography>
-                  </Box>
-                  <TrendingIcon sx={{ fontSize: 48, opacity: 0.5 }} />
-                </Box>
-              </CardContent>
-              <Box
-                sx={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: '4px',
-                  background: 'linear-gradient(90deg, #FFD700, #CE1126)',
-                }}
-              />
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <StatCard
-              title="Villes desservies"
-              value={stats.cities}
-              icon={CitiesIcon}
-              gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-              onClick={() => navigate('/cities')}
-              subtitle="Réseau TKF"
-            />
-          </Grid>
-        </Grid>
-
-        {/* Quick Actions */}
-        <Typography variant="h5" sx={{ mb: 3, fontWeight: 600, color: '#007A5E' }}>
-          🚀 Actions Rapides
-        </Typography>
-        <Grid container spacing={2} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <QuickActionCard
-              title="Nouveau Trajet"
-              description="Programmer un trajet"
-              icon={ScheduleIcon}
-              onClick={() => navigate('/trips/new')}
               color="#CE1126"
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <QuickActionCard
-              title="Vendre Billet"
-              description="Créer un billet"
-              icon={TicketsIcon}
-              onClick={() => navigate('/tickets/new')}
+            <GovStatCard
+              title="Colis Transportés"
+              value={stats.parcels}
+              icon={ParcelsIcon}
+              onClick={() => navigate('/parcels')}
               color="#007A5E"
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <QuickActionCard
-              title="Rapports"
-              description="Analyses & statistiques"
-              icon={ReportsIcon}
-              onClick={() => navigate('/reports')}
+            <GovStatCard
+              title="Employés Actifs"
+              value={stats.employees}
+              icon={EmployeesIcon}
+              onClick={() => navigate('/employees')}
               color="#FFD700"
             />
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <QuickActionCard
-              title="Gestion RH"
-              description="Employés & congés"
-              icon={EmployeesIcon}
-              onClick={() => navigate('/employees')}
-              color="#667eea"
+        </Grid>
+
+        {/* Rangée Secondaire */}
+        <Grid container spacing={2.5} sx={{ mb: 4 }}>
+          <Grid item xs={12} md={6}>
+            {/* Revenu Total */}
+            <Card
+              sx={{
+                backgroundColor: '#003D66',
+                color: '#ffffff',
+                borderRadius: '8px',
+                border: '2px solid #003D66',
+                boxShadow: '0 4px 16px rgba(0, 61, 102, 0.2)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '-50px',
+                  right: '-50px',
+                  width: '200px',
+                  height: '200px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(206, 17, 38, 0.1)',
+                }}
+              />
+              <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        opacity: 0.9,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                      }}
+                    >
+                      Chiffre d'Affaires Total
+                    </Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 700, mt: 1 }}>
+                      {stats.revenue.toLocaleString('fr-FR')} CFA
+                    </Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.85, mt: 1 }}>
+                      Paiements complétés
+                    </Typography>
+                  </Box>
+                  <TrendingIcon sx={{ fontSize: 40, opacity: 0.6 }} />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            {/* Villes et Couverture */}
+            <GovStatCard
+              title="Villes Desservies"
+              value={stats.cities}
+              icon={CitiesIcon}
+              onClick={() => navigate('/cities')}
+              color="#CE1126"
             />
           </Grid>
         </Grid>
 
-        {/* Recent Activity */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid #e0e0e0' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#CE1126' }}>
-                  🚌 Trajets récents
-                </Typography>
-                <Button size="small" onClick={() => navigate('/trips')} sx={{ color: '#007A5E' }}>
-                  Voir tout
-                </Button>
-              </Box>
-              <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-                {stats.recentTrips.length === 0 ? (
-                  <Typography color="textSecondary" sx={{ py: 2, textAlign: 'center' }}>
-                    Aucun trajet récent
-                  </Typography>
-                ) : (
-                  stats.recentTrips.map((trip: any) => (
-                    <ListItem key={trip.id} sx={{ py: 1, borderRadius: 1, mb: 1, bgcolor: 'grey.50' }}>
-                      <ListItemText
-                        primary={
-                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                            {trip.departure_city} → {trip.arrival_city}
-                          </Typography>
-                        }
-                        secondary={
-                          <Box>
-                            <Typography variant="caption" color="textSecondary">
-                              {new Date(trip.departure_date).toLocaleDateString('fr-FR')}
-                            </Typography>
-                            <LinearProgress
-                              variant="determinate"
-                              value={(trip.available_seats / trip.total_seats) * 100}
-                              sx={{ mt: 1, height: 4, borderRadius: 2 }}
-                            />
-                          </Box>
-                        }
-                      />
-                      <Chip
-                        label={`${trip.available_seats}/${trip.total_seats} places`}
-                        size="small"
-                        color={trip.available_seats === 0 ? 'error' : trip.available_seats < 5 ? 'warning' : 'success'}
-                        variant="outlined"
-                      />
-                    </ListItem>
-                  ))
-                )}
-              </List>
-            </Paper>
+        {/* Actions Rapides Professionnelles */}
+        <Box sx={{ mb: 4 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              color: '#003D66',
+              mb: 2,
+              fontSize: '1.1rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}
+          >
+            📋 Actions Disponibles
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={3}>
+              <GovActionButton label="Ajouter un Trajet" icon={ScheduleIcon} onClick={() => navigate('/trips')} />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <GovActionButton label="Vendre un Billet" icon={TicketsIcon} onClick={() => navigate('/tickets')} />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <GovActionButton label="Gestion RH" icon={EmployeesIcon} onClick={() => navigate('/employees')} />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <GovActionButton label="Rapports" icon={ReportsIcon} onClick={() => navigate('/reports')} />
+            </Grid>
           </Grid>
+        </Box>
 
-          <Grid item xs={12} md={6}>
-            <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid #e0e0e0' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#CE1126' }}>
-                  💳 Paiements récents
-                </Typography>
-                <Button size="small" onClick={() => navigate('/payments')} sx={{ color: '#007A5E' }}>
-                  Voir tout
-                </Button>
-              </Box>
-              <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-                {stats.recentPayments.length === 0 ? (
-                  <Typography color="textSecondary" sx={{ py: 2, textAlign: 'center' }}>
-                    Aucun paiement récent
-                  </Typography>
-                ) : (
-                  stats.recentPayments.map((payment: any) => (
-                    <ListItem key={payment.id} sx={{ py: 1, borderRadius: 1, mb: 1, bgcolor: 'grey.50' }}>
-                      <ListItemText
-                        primary={
-                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                            {payment.transaction_id}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography variant="caption" color="textSecondary">
-                            {payment.payment_method} • {new Date(payment.created_at).toLocaleDateString('fr-FR')}
-                          </Typography>
-                        }
-                      />
-                      <Chip
-                        label={`${payment.amount.toLocaleString()} CFA`}
-                        size="small"
-                        color={payment.status === 'completed' ? 'success' : payment.status === 'pending' ? 'warning' : 'error'}
-                        variant="outlined"
-                      />
-                    </ListItem>
-                  ))
-                )}
-              </List>
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* Footer */}
-        <Box sx={{ mt: 4, p: 2, bgcolor: 'grey.50', borderRadius: 2, textAlign: 'center' }}>
-          <Typography variant="body2" color="textSecondary">
-            🏛️ Portail TKF - Système de Gestion du Transport - Burkina Faso
+        {/* Pied de page officiel */}
+        <Box
+          sx={{
+            mt: 6,
+            pt: 3,
+            borderTop: '2px solid #ddd',
+            textAlign: 'center',
+            backgroundColor: '#f5f5f5',
+            borderRadius: '8px',
+            p: 3,
+          }}
+        >
+          <Typography variant="body2" sx={{ color: '#666', fontWeight: 500 }}>
+            🏛️ <strong>TKF - Transporteur Kendrick Faso</strong> | Système de Gestion du Transport
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#999', mt: 1 }}>
+            © 2024-2025 • République du Burkina Faso • Tous droits réservés
           </Typography>
         </Box>
       </Container>

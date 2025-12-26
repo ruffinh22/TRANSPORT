@@ -7,8 +7,8 @@ export { ProtectedRoute } from './ProtectedRoute'
 export { PaginationComponent } from './PaginationComponent'
 export { AdvancedPagination } from './AdvancedPagination'
 export { StatisticsChart } from './StatisticsChart'
-export { AdvancedCharts } from './AdvancedCharts'
-export { AdvancedFilters } from './AdvancedFilters'
+export { LineChartComponent, BarChartComponent, PieChartComponent } from './AdvancedCharts'
+export { AdvancedFilter } from './AdvancedFilters'
 export { MapComponent } from './MapComponent'
 
 // Composants Responsive Design Pro
