@@ -5,13 +5,6 @@ import {
   Card,
   CardContent,
   TextField,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -19,19 +12,22 @@ import {
   Typography,
   Chip,
   Stack,
-  Grid,
   FormControl,
   InputLabel,
   Select,
+  Container,
+  Alert,
+  CircularProgress,
 } from '@mui/material'
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as ViewIcon,
-  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material'
 import { MainLayout } from '../components/MainLayout'
+import { ResponsivePageTemplate, ResponsiveTable, ResponsiveFilters } from '../components'
+import { responsiveStyles } from '../styles/responsiveStyles'
 import { tripService } from '../services'
 
 interface Trip {
@@ -56,7 +52,8 @@ export const TripsPage: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  
+  const [error, setError] = useState<string | null>(null)
+
   const [formData, setFormData] = useState({
     departure_city: '',
     arrival_city: '',
@@ -78,9 +75,11 @@ export const TripsPage: React.FC = () => {
     try {
       const params = filterStatus !== 'all' ? { status: filterStatus } : {}
       const response = await tripService.list(params)
-      setTrips(response.data.results || response.data)
-    } catch (error) {
-      console.error('Erreur au chargement des trajets:', error)
+      setTrips(response.data.results || response.data || [])
+      setError(null)
+    } catch (err) {
+      setError('Erreur au chargement des trajets')
+      console.error(err)
     }
     setLoading(false)
   }
@@ -116,311 +115,187 @@ export const TripsPage: React.FC = () => {
     setOpenDialog(true)
   }
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false)
-    setEditingId(null)
-  }
-
-  const handleSaveTrip = async () => {
+  const handleSave = async () => {
     try {
       if (editingId) {
         await tripService.update(editingId, formData)
       } else {
         await tripService.create(formData)
       }
-      handleCloseDialog()
-      loadTrips()
-    } catch (error) {
-      console.error('Erreur:', error)
+      await loadTrips()
+      setOpenDialog(false)
+    } catch (err) {
+      setError('Erreur lors de la sauvegarde')
     }
   }
 
-  const handleDeleteTrip = async (id: number) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm('Êtes-vous sûr?')) {
       try {
         await tripService.delete(id)
-        loadTrips()
-      } catch (error) {
-        console.error('Erreur:', error)
+        await loadTrips()
+      } catch (err) {
+        setError('Erreur lors de la suppression')
       }
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'scheduled': return 'info'
-      case 'completed': return 'success'
-      case 'cancelled': return 'error'
-      default: return 'default'
-    }
-  }
-
-  const filteredTrips = trips.filter(trip =>
-    trip.departure_city.toLowerCase().includes(search.toLowerCase()) ||
-    trip.arrival_city.toLowerCase().includes(search.toLowerCase())
+  const filteredTrips = trips.filter(
+    (trip) =>
+      trip.departure_city.toLowerCase().includes(search.toLowerCase()) ||
+      trip.arrival_city.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
     <MainLayout>
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+      <ResponsivePageTemplate
+        title="Gestion des Trajets"
+        subtitle="Consultez et gérez l'ensemble de vos trajets"
+        actions={[
           <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={() => window.history.back()}
-            variant="outlined"
-            size="small"
+            key="add"
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
           >
-            Retour
-          </Button>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            Gestion des Trajets
-          </Typography>
-        </Box>
+            Nouveau Trajet
+          </Button>,
+        ]}
+      >
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-        {/* Stats Cards */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-              <CardContent>
-                <Typography color="inherit" gutterBottom variant="overline">
-                  Total trajets
-                </Typography>
-                <Typography variant="h4">{trips.length}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
-              <CardContent>
-                <Typography color="inherit" gutterBottom variant="overline">
-                  Programmés
-                </Typography>
-                <Typography variant="h4">
-                  {trips.filter(t => t.status === 'scheduled').length}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white' }}>
-              <CardContent>
-                <Typography color="inherit" gutterBottom variant="overline">
-                  Terminés
-                </Typography>
-                <Typography variant="h4">
-                  {trips.filter(t => t.status === 'completed').length}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', color: 'white' }}>
-              <CardContent>
-                <Typography color="inherit" gutterBottom variant="overline">
-                  Places disponibles
-                </Typography>
-                <Typography variant="h4">
-                  {trips.reduce((sum, t) => sum + t.available_seats, 0)}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+        <ResponsiveFilters
+          fields={[
+            { name: 'search', label: 'Recherche', value: search, onChange: setSearch },
+            {
+              name: 'status',
+              label: 'Statut',
+              value: filterStatus,
+              onChange: setFilterStatus,
+              options: [
+                { label: 'Tous', value: 'all' },
+                { label: 'Planifié', value: 'scheduled' },
+                { label: 'En cours', value: 'ongoing' },
+                { label: 'Terminé', value: 'completed' },
+              ],
+            },
+          ]}
+          onApply={() => loadTrips()}
+          onReset={() => {
+            setSearch('')
+            setFilterStatus('all')
+          }}
+        />
 
-        {/* Filters and Search */}
-        <Card sx={{ mb: 3, p: 2 }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 2 }}>
-            <TextField
-              label="Rechercher (ville de départ/arrivée)"
-              variant="outlined"
-              size="small"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              sx={{ flex: 1 }}
-            />
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel>Statut</InputLabel>
-              <Select
-                value={filterStatus}
-                label="Statut"
-                onChange={(e) => setFilterStatus(e.target.value)}
-                size="small"
-              >
-                <option value="all">Tous</option>
-                <option value="scheduled">Programmés</option>
-                <option value="completed">Terminés</option>
-                <option value="cancelled">Annulés</option>
-              </Select>
-            </FormControl>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => handleOpenDialog()}
-              sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              }}
-            >
-              Ajouter trajet
+        {loading ? (
+          <Box sx={responsiveStyles.flexCenter}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <ResponsiveTable
+            columns={[
+              { key: 'departure_city', label: 'Départ' },
+              { key: 'arrival_city', label: 'Arrivée' },
+              { key: 'departure_date', label: 'Date départ' },
+              { key: 'total_seats', label: 'Sièges' },
+              { key: 'available_seats', label: 'Disponibles' },
+              {
+                key: 'status',
+                label: 'Statut',
+                render: (val) => (
+                  <Chip
+                    label={val}
+                    color={val === 'scheduled' ? 'primary' : val === 'ongoing' ? 'warning' : 'success'}
+                    size="small"
+                  />
+                ),
+              },
+              {
+                key: 'actions',
+                label: 'Actions',
+                render: (_, row) => (
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      size="small"
+                      variant="text"
+                      onClick={() => handleOpenDialog(row)}
+                    >
+                      ✏️
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="text"
+                      color="error"
+                      onClick={() => handleDelete(row.id)}
+                    >
+                      🗑️
+                    </Button>
+                  </Stack>
+                ),
+              },
+            ]}
+            data={filteredTrips}
+            emptyMessage="Aucun trajet trouvé"
+          />
+        )}
+
+        {/* Dialog Form */}
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>{editingId ? 'Éditer le trajet' : 'Nouveau trajet'}</DialogTitle>
+          <DialogContent sx={{ pt: 2 }}>
+            <Stack spacing={2}>
+              <TextField
+                label="Ville de départ"
+                fullWidth
+                value={formData.departure_city}
+                onChange={(e) => setFormData({ ...formData, departure_city: e.target.value })}
+              />
+              <TextField
+                label="Ville d'arrivée"
+                fullWidth
+                value={formData.arrival_city}
+                onChange={(e) => setFormData({ ...formData, arrival_city: e.target.value })}
+              />
+              <TextField
+                label="Date de départ"
+                type="datetime-local"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                value={formData.departure_date}
+                onChange={(e) => setFormData({ ...formData, departure_date: e.target.value })}
+              />
+              <TextField
+                label="Date d'arrivée"
+                type="datetime-local"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                value={formData.arrival_date}
+                onChange={(e) => setFormData({ ...formData, arrival_date: e.target.value })}
+              />
+              <TextField
+                label="Nombre de sièges"
+                type="number"
+                fullWidth
+                value={formData.total_seats}
+                onChange={(e) => setFormData({ ...formData, total_seats: parseInt(e.target.value) })}
+              />
+              <TextField
+                label="Prix par siège (FCFA)"
+                type="number"
+                fullWidth
+                value={formData.price_per_seat}
+                onChange={(e) => setFormData({ ...formData, price_per_seat: parseInt(e.target.value) })}
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Annuler</Button>
+            <Button variant="contained" onClick={handleSave}>
+              Sauvegarder
             </Button>
-          </Stack>
-        </Card>
-
-        {/* Trips Table */}
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead sx={{ backgroundColor: '#f5f6fa' }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>De / Vers</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Date départ</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 700 }}>Places</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 700 }}>Prix/place</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Statut</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700 }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredTrips.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                    <Typography color="textSecondary">
-                      Aucun trajet trouvé
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredTrips.map((trip) => (
-                  <TableRow key={trip.id} hover>
-                    <TableCell>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {trip.departure_city} → {trip.arrival_city}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{new Date(trip.departure_date).toLocaleDateString('fr-FR')}</TableCell>
-                    <TableCell align="right">
-                      <Chip
-                        label={`${trip.available_seats}/${trip.total_seats}`}
-                        size="small"
-                        variant={trip.available_seats === 0 ? 'filled' : 'outlined'}
-                        color={trip.available_seats === 0 ? 'error' : 'success'}
-                      />
-                    </TableCell>
-                    <TableCell align="right">{trip.price_per_seat} CFA</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={trip.status}
-                        size="small"
-                        color={getStatusColor(trip.status) as any}
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Stack direction="row" spacing={1} justifyContent="center">
-                        <Button
-                          size="small"
-                          startIcon={<ViewIcon />}
-                          onClick={() => console.log('View', trip.id)}
-                        >
-                          Voir
-                        </Button>
-                        <Button
-                          size="small"
-                          startIcon={<EditIcon />}
-                          onClick={() => handleOpenDialog(trip)}
-                        >
-                          Éditer
-                        </Button>
-                        <Button
-                          size="small"
-                          color="error"
-                          startIcon={<DeleteIcon />}
-                          onClick={() => handleDeleteTrip(trip.id)}
-                        >
-                          Supprimer
-                        </Button>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-
-      {/* Add/Edit Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>
-          {editingId ? 'Éditer trajet' : 'Ajouter un trajet'}
-        </DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-          <TextField
-            label="Ville de départ"
-            variant="outlined"
-            value={formData.departure_city}
-            onChange={(e) => setFormData({ ...formData, departure_city: e.target.value })}
-            fullWidth
-          />
-          <TextField
-            label="Ville d'arrivée"
-            variant="outlined"
-            value={formData.arrival_city}
-            onChange={(e) => setFormData({ ...formData, arrival_city: e.target.value })}
-            fullWidth
-          />
-          <TextField
-            label="Date départ"
-            type="datetime-local"
-            variant="outlined"
-            value={formData.departure_date}
-            onChange={(e) => setFormData({ ...formData, departure_date: e.target.value })}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Date arrivée"
-            type="datetime-local"
-            variant="outlined"
-            value={formData.arrival_date}
-            onChange={(e) => setFormData({ ...formData, arrival_date: e.target.value })}
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Nombre de places"
-            type="number"
-            variant="outlined"
-            value={formData.total_seats}
-            onChange={(e) => setFormData({ ...formData, total_seats: parseInt(e.target.value) })}
-            fullWidth
-          />
-          <TextField
-            label="Prix par place"
-            type="number"
-            variant="outlined"
-            value={formData.price_per_seat}
-            onChange={(e) => setFormData({ ...formData, price_per_seat: parseInt(e.target.value) })}
-            fullWidth
-          />
-          <FormControl fullWidth>
-            <InputLabel>Statut</InputLabel>
-            <Select
-              value={formData.status}
-              label="Statut"
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            >
-              <option value="scheduled">Programmé</option>
-              <option value="completed">Terminé</option>
-              <option value="cancelled">Annulé</option>
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Annuler</Button>
-          <Button onClick={handleSaveTrip} variant="contained">
-            {editingId ? 'Mettre à jour' : 'Créer'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </DialogActions>
+        </Dialog>
+      </ResponsivePageTemplate>
     </MainLayout>
   )
 }

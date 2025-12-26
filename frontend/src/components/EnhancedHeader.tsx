@@ -19,8 +19,9 @@ import {
   Person as PersonIcon,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import { useNotification } from '../../services/NotificationService'
-import { useWebSocketNotifications } from '../../services/WebSocketService'
+// Notification services - optional imports
+// import { useNotification } from '../../services/NotificationService'
+// import { useWebSocketNotifications } from '../../services/WebSocketService'
 
 interface EnhancedHeaderProps {
   onMenuClick?: () => void

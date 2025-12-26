@@ -14,6 +14,7 @@ import {
   Avatar,
   Divider,
   LinearProgress,
+  Container,
 } from '@mui/material'
 import {
   TrendingUp as TrendingIcon,
@@ -32,6 +33,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '../hooks'
 import { MainLayout } from '../components/MainLayout'
 import { tripService, ticketService, parcelService, paymentService, employeeService, cityService, exportService } from '../services'
+import { responsiveStyles } from '../styles/responsiveStyles'
 
 interface Stats {
   trips: number
@@ -221,19 +223,19 @@ export const Dashboard: React.FC = () => {
 
   return (
     <MainLayout>
-      <Box sx={{ mb: 4 }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
         {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box sx={responsiveStyles.headerSection}>
+          <Box sx={responsiveStyles.flexBetween}>
             <Box>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: '#CE1126' }}>
+              <Typography sx={responsiveStyles.pageTitle}>
                 🏛️ Portail TKF - Tableau de Bord
               </Typography>
-              <Typography variant="body1" color="textSecondary" sx={{ mt: 1 }}>
+              <Typography sx={responsiveStyles.pageSubtitle}>
                 Bienvenue, {user?.first_name}! Voici un aperçu complet de vos opérations de transport
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box sx={responsiveStyles.actionButtons}>
               <Button
                 startIcon={<DownloadIcon />}
                 variant="outlined"
@@ -568,7 +570,7 @@ export const Dashboard: React.FC = () => {
             🏛️ Portail TKF - Système de Gestion du Transport - Burkina Faso
           </Typography>
         </Box>
-      </Box>
+      </Container>
     </MainLayout>
   )
 }

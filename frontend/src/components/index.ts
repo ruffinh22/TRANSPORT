@@ -1,0 +1,20 @@
+// src/components/index.ts
+export { MainLayout } from './MainLayout'
+export { GovernmentHeader } from './GovernmentHeader'
+export { GovernmentFooter } from './GovernmentFooter'
+export { EnhancedHeader } from './EnhancedHeader'
+export { ProtectedRoute } from './ProtectedRoute'
+export { PaginationComponent } from './PaginationComponent'
+export { AdvancedPagination } from './AdvancedPagination'
+export { StatisticsChart } from './StatisticsChart'
+export { AdvancedCharts } from './AdvancedCharts'
+export { AdvancedFilters } from './AdvancedFilters'
+export { MapComponent } from './MapComponent'
+
+// Composants Responsive Design Pro
+export { ResponsivePageTemplate } from './ResponsivePageTemplate'
+export { ResponsiveTable } from './ResponsiveTable'
+export { ResponsiveGrid, StatsGrid, CardGrid, DetailGrid } from './ResponsiveGrid'
+export { ResponsiveFilters } from './ResponsiveFilters'
+export { ResponsiveAppBar } from './ResponsiveAppBar'
+export { ResponsiveForm } from './ResponsiveForm'

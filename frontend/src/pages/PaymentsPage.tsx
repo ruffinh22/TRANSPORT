@@ -2,48 +2,30 @@ import React, { useState, useEffect } from 'react'
 import {
   Box,
   Button,
-  Card,
-  CardContent,
-  TextField,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
+  Stack,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Typography,
+  TextField,
   Chip,
-  Stack,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
+  Alert,
+  CircularProgress,
 } from '@mui/material'
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Receipt as ReceiptIcon,
-  ArrowBack as ArrowBackIcon,
-} from '@mui/icons-material'
+import { Add as AddIcon } from '@mui/icons-material'
 import { MainLayout } from '../components/MainLayout'
+import { ResponsivePageTemplate, ResponsiveTable, ResponsiveFilters } from '../components'
+import { responsiveStyles } from '../styles/responsiveStyles'
 import { paymentService } from '../services'
 
 interface Payment {
   id: number
-  trip: number
-  ticket: number
-  parcel?: number
+  reference: string
   amount: number
-  payment_method: string
+  method: string
   status: string
-  transaction_id: string
   created_at: string
+  description: string
 }
 
 export const PaymentsPage: React.FC = () => {
@@ -53,31 +35,29 @@ export const PaymentsPage: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [filterMethod, setFilterMethod] = useState('all')
+  const [error, setError] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
-    trip: 1,
-    ticket: 1,
-    parcel: undefined,
-    amount: 5000,
-    payment_method: 'cash',
-    status: 'completed',
+    reference: '',
+    amount: 0,
+    method: 'cash',
+    status: 'pending',
+    description: '',
   })
 
   useEffect(() => {
     loadPayments()
-  }, [filterStatus, filterMethod])
+  }, [filterStatus])
 
   const loadPayments = async () => {
     setLoading(true)
     try {
-      const params: any = {}
-      if (filterStatus !== 'all') params.status = filterStatus
-      if (filterMethod !== 'all') params.payment_method = filterMethod
+      const params = filterStatus !== 'all' ? { status: filterStatus } : {}
       const response = await paymentService.list(params)
-      setPayments(response.data.results || response.data)
-    } catch (error) {
-      console.error('Erreur:', error)
+      setPayments(response.data.results || response.data || [])
+      setError(null)
+    } catch (err) {
+      setError('Erreur au chargement des paiements')
     }
     setLoading(false)
   }
@@ -86,318 +66,139 @@ export const PaymentsPage: React.FC = () => {
     if (payment) {
       setEditingId(payment.id)
       setFormData({
-        trip: payment.trip,
-        ticket: payment.ticket,
-        parcel: payment.parcel,
+        reference: payment.reference,
         amount: payment.amount,
-        payment_method: payment.payment_method,
+        method: payment.method,
         status: payment.status,
+        description: payment.description,
       })
     } else {
       setEditingId(null)
       setFormData({
-        trip: 1,
-        ticket: 1,
-        parcel: undefined,
-        amount: 5000,
-        payment_method: 'cash',
-        status: 'completed',
+        reference: '',
+        amount: 0,
+        method: 'cash',
+        status: 'pending',
+        description: '',
       })
     }
     setOpenDialog(true)
   }
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false)
-    setEditingId(null)
-  }
-
-  const handleSavePayment = async () => {
+  const handleSave = async () => {
     try {
       if (editingId) {
         await paymentService.update(editingId, formData)
       } else {
         await paymentService.create(formData)
       }
-      handleCloseDialog()
-      loadPayments()
-    } catch (error) {
-      console.error('Erreur:', error)
+      await loadPayments()
+      setOpenDialog(false)
+    } catch (err) {
+      setError('Erreur lors de la sauvegarde')
     }
   }
 
-  const handleDeletePayment = async (id: number) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm('Êtes-vous sûr?')) {
       try {
         await paymentService.delete(id)
-        loadPayments()
-      } catch (error) {
-        console.error('Erreur:', error)
+        await loadPayments()
+      } catch (err) {
+        setError('Erreur lors de la suppression')
       }
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'success'
-      case 'pending': return 'warning'
-      case 'failed': return 'error'
-      case 'refunded': return 'info'
-      default: return 'default'
-    }
-  }
-
-  const filteredPayments = payments.filter(payment =>
-    payment.transaction_id.toLowerCase().includes(search.toLowerCase())
+  const filteredPayments = payments.filter(
+    (p) => p.reference.toLowerCase().includes(search.toLowerCase())
   )
-
-  const totalAmount = filteredPayments.reduce((sum, p) => sum + p.amount, 0)
-  const completedAmount = filteredPayments
-    .filter(p => p.status === 'completed')
-    .reduce((sum, p) => sum + p.amount, 0)
 
   return (
     <MainLayout>
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-          <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={() => window.history.back()}
-            variant="outlined"
-            size="small"
-          >
-            Retour
-          </Button>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            Gestion des Paiements
-          </Typography>
-        </Box>
+      <ResponsivePageTemplate
+        title="Gestion des Paiements"
+        subtitle="Consultez et gérez tous vos paiements"
+        actions={[
+          <Button key="add" variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+            Nouveau Paiement
+          </Button>,
+        ]}
+      >
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-        {/* Stats Cards */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-              <CardContent>
-                <Typography color="inherit" gutterBottom variant="overline">
-                  Total paiements
-                </Typography>
-                <Typography variant="h4">{payments.length}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white' }}>
-              <CardContent>
-                <Typography color="inherit" gutterBottom variant="overline">
-                  Montant total
-                </Typography>
-                <Typography variant="h4">
-                  {totalAmount.toLocaleString()} CFA
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)', color: 'white' }}>
-              <CardContent>
-                <Typography color="inherit" gutterBottom variant="overline">
-                  Complétés
-                </Typography>
-                <Typography variant="h4">
-                  {payments.filter(p => p.status === 'completed').length}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
-              <CardContent>
-                <Typography color="inherit" gutterBottom variant="overline">
-                  Montant complété
-                </Typography>
-                <Typography variant="h4">
-                  {completedAmount.toLocaleString()} CFA
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+        <ResponsiveFilters
+          fields={[
+            { name: 'search', label: 'Référence', value: search, onChange: setSearch },
+            {
+              name: 'status',
+              label: 'Statut',
+              value: filterStatus,
+              onChange: setFilterStatus,
+              options: [
+                { label: 'Tous', value: 'all' },
+                { label: 'En attente', value: 'pending' },
+                { label: 'Complété', value: 'completed' },
+                { label: 'Échoué', value: 'failed' },
+              ],
+            },
+          ]}
+          onApply={() => loadPayments()}
+          onReset={() => {
+            setSearch('')
+            setFilterStatus('all')
+          }}
+        />
 
-        {/* Filters */}
-        <Card sx={{ mb: 3, p: 2 }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 2 }}>
-            <TextField
-              label="Rechercher transaction"
-              variant="outlined"
-              size="small"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              sx={{ flex: 1 }}
-            />
-            <FormControl sx={{ minWidth: 150 }}>
-              <InputLabel>Statut</InputLabel>
-              <Select
-                value={filterStatus}
-                label="Statut"
-                onChange={(e) => setFilterStatus(e.target.value)}
-                size="small"
-              >
-                <option value="all">Tous</option>
-                <option value="completed">Complétés</option>
-                <option value="pending">En attente</option>
-                <option value="failed">Échoués</option>
-                <option value="refunded">Remboursés</option>
-              </Select>
-            </FormControl>
-            <FormControl sx={{ minWidth: 150 }}>
-              <InputLabel>Méthode</InputLabel>
-              <Select
-                value={filterMethod}
-                label="Méthode"
-                onChange={(e) => setFilterMethod(e.target.value)}
-                size="small"
-              >
-                <option value="all">Tous</option>
-                <option value="cash">Espèces</option>
-                <option value="card">Carte</option>
-                <option value="mobile">Mobile</option>
-                <option value="bank">Banque</option>
-              </Select>
-            </FormControl>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => handleOpenDialog()}
-              sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
-            >
-              Ajouter paiement
-            </Button>
-          </Stack>
-        </Card>
-
-        {/* Payments Table */}
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead sx={{ backgroundColor: '#f5f6fa' }}>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>ID Transaction</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 700 }}>Montant</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Méthode</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Statut</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 700 }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredPayments.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                    <Typography color="textSecondary">Aucun paiement trouvé</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredPayments.map((payment) => (
-                  <TableRow key={payment.id} hover>
-                    <TableCell sx={{ fontFamily: 'monospace', fontWeight: 600 }}>
-                      {payment.transaction_id}
-                    </TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600 }}>
-                      {payment.amount.toLocaleString()} CFA
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={payment.payment_method}
-                        size="small"
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={payment.status}
-                        size="small"
-                        color={getStatusColor(payment.status) as any}
-                        variant="outlined"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {new Date(payment.created_at).toLocaleDateString('fr-FR')}
-                    </TableCell>
-                    <TableCell align="center">
-                      <Stack direction="row" spacing={0.5} justifyContent="center">
-                        <Button
-                          size="small"
-                          startIcon={<ReceiptIcon />}
-                          onClick={() => console.log('Receipt', payment.id)}
-                        />
-                        <Button
-                          size="small"
-                          startIcon={<EditIcon />}
-                          onClick={() => handleOpenDialog(payment)}
-                        />
-                        <Button
-                          size="small"
-                          color="error"
-                          startIcon={<DeleteIcon />}
-                          onClick={() => handleDeletePayment(payment.id)}
-                        />
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-
-      {/* Add/Edit Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 700 }}>
-          {editingId ? 'Éditer paiement' : 'Ajouter un paiement'}
-        </DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-          <TextField
-            label="Montant"
-            type="number"
-            variant="outlined"
-            value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: parseInt(e.target.value) })}
-            fullWidth
+        {loading ? (
+          <Box sx={responsiveStyles.flexCenter}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <ResponsiveTable
+            columns={[
+              { key: 'reference', label: 'Référence' },
+              { key: 'amount', label: 'Montant (FCFA)' },
+              { key: 'method', label: 'Méthode' },
+              {
+                key: 'status',
+                label: 'Statut',
+                render: (val) => (
+                  <Chip label={val} color={val === 'completed' ? 'success' : 'warning'} size="small" />
+                ),
+              },
+              { key: 'created_at', label: 'Date' },
+              {
+                key: 'actions',
+                label: 'Actions',
+                render: (_, row) => (
+                  <Stack direction="row" spacing={1}>
+                    <Button size="small" variant="text" onClick={() => handleOpenDialog(row)}>✏️</Button>
+                    <Button size="small" variant="text" color="error" onClick={() => handleDelete(row.id)}>🗑️</Button>
+                  </Stack>
+                ),
+              },
+            ]}
+            data={filteredPayments}
+            emptyMessage="Aucun paiement trouvé"
           />
-          <FormControl fullWidth>
-            <InputLabel>Méthode de paiement</InputLabel>
-            <Select
-              value={formData.payment_method}
-              label="Méthode de paiement"
-              onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-            >
-              <option value="cash">Espèces</option>
-              <option value="card">Carte</option>
-              <option value="mobile">Mobile</option>
-              <option value="bank">Banque</option>
-            </Select>
-          </FormControl>
-          <FormControl fullWidth>
-            <InputLabel>Statut</InputLabel>
-            <Select
-              value={formData.status}
-              label="Statut"
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            >
-              <option value="completed">Complété</option>
-              <option value="pending">En attente</option>
-              <option value="failed">Échoué</option>
-              <option value="refunded">Remboursé</option>
-            </Select>
-          </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Annuler</Button>
-          <Button onClick={handleSavePayment} variant="contained">
-            {editingId ? 'Mettre à jour' : 'Créer'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        )}
+
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>{editingId ? 'Éditer' : 'Nouveau paiement'}</DialogTitle>
+          <DialogContent sx={{ pt: 2 }}>
+            <Stack spacing={2}>
+              <TextField label="Référence" fullWidth value={formData.reference} onChange={(e) => setFormData({ ...formData, reference: e.target.value })} />
+              <TextField label="Montant (FCFA)" type="number" fullWidth value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: parseInt(e.target.value) })} />
+              <TextField label="Description" multiline rows={2} fullWidth value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Annuler</Button>
+            <Button variant="contained" onClick={handleSave}>Sauvegarder</Button>
+          </DialogActions>
+        </Dialog>
+      </ResponsivePageTemplate>
     </MainLayout>
   )
 }
