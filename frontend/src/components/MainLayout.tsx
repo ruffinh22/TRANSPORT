@@ -63,10 +63,15 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
   const [openDrawer, setOpenDrawer] = useState(true)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
 
   const handleDrawerToggle = () => {
     setOpenDrawer(!openDrawer)
+  }
+
+  const handleMobileDrawerToggle = () => {
+    setMobileOpen(!mobileOpen)
   }
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -102,10 +107,17 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             <IconButton
               color="inherit"
               aria-label="toggle drawer"
-              onClick={handleDrawerToggle}
-              sx={{ mr: 2 }}
+              onClick={handleMobileDrawerToggle}
+              sx={{ 
+                mr: 2,
+                display: { xs: 'flex', md: 'none' },
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                }
+              }}
             >
-              {openDrawer ? <CloseIcon /> : <MenuIcon />}
+              {mobileOpen ? <CloseIcon /> : <MenuIcon />}
             </IconButton>
 
             <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 700, letterSpacing: '1px' }}>
@@ -163,19 +175,80 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
       {/* Content Area with Sidebar */}
       <Box sx={{ display: 'flex', flex: 1 }}>
-        {/* Sidebar Drawer */}
+        {/* Desktop Sidebar Drawer */}
         <Drawer
-          variant="temporary"
+          variant="permanent"
           open={openDrawer}
-          onClose={handleDrawerToggle}
           sx={{
-            width: DRAWER_WIDTH,
+            width: openDrawer ? DRAWER_WIDTH : 0,
             flexShrink: 0,
+            display: { xs: 'none', md: 'block' },
+            transition: 'width 0.3s ease',
             '& .MuiDrawer-paper': {
               width: DRAWER_WIDTH,
               boxSizing: 'border-box',
               backgroundColor: '#f8f9fa',
               borderRight: '1px solid #e0e0e0',
+              position: 'relative',
+            },
+          }}
+        >
+          <Box sx={{ p: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography variant="overline" sx={{ fontWeight: 700, color: '#CE1126', letterSpacing: '1px' }}>
+                Menu Principal
+              </Typography>
+              <IconButton 
+                size="small" 
+                onClick={handleDrawerToggle}
+                sx={{ color: '#CE1126' }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          </Box>
+
+          <List>
+            {menuItems.map((item) => (
+              <ListItem
+                button
+                key={item.path}
+                onClick={() => {
+                  navigate(item.path)
+                }}
+                sx={{
+                  '&:hover': {
+                    backgroundColor: 'rgba(206, 17, 38, 0.08)',
+                    borderLeft: '4px solid #CE1126',
+                    pl: 1.75,
+                  },
+                  transition: 'all 0.3s ease',
+                  mb: 0.5,
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40, color: '#CE1126' }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.label}
+                  primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Drawer>
+
+        {/* Mobile Sidebar Drawer */}
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleMobileDrawerToggle}
+          sx={{
+            display: { xs: 'block', md: 'none' },
+            '& .MuiDrawer-paper': {
+              width: DRAWER_WIDTH,
+              boxSizing: 'border-box',
+              backgroundColor: '#f8f9fa',
             },
           }}
         >
@@ -192,19 +265,45 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 key={item.path}
                 onClick={() => {
                   navigate(item.path)
-                  setOpenDrawer(false)
+                  setMobileOpen(false)
                 }}
                 sx={{
                   '&:hover': {
                     backgroundColor: 'rgba(206, 17, 38, 0.08)',
-                    borderLeft: '4px solid #CE1126',
-                    pl: 1.75,
                   },
                   transition: 'all 0.3s ease',
                   mb: 0.5,
                 }}
               >
                 <ListItemIcon sx={{ minWidth: 40, color: '#CE1126' }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.label}
+                  primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
+                />
+              </ListItem>
+            ))}
+          </List>
+
+          <Divider />
+          <List>
+            {settingsItems.map((item) => (
+              <ListItem
+                button
+                key={item.path}
+                onClick={() => {
+                  navigate(item.path)
+                  setMobileOpen(false)
+                }}
+                sx={{
+                  '&:hover': {
+                    backgroundColor: 'rgba(206, 17, 38, 0.08)',
+                  },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40, color: '#007A5E' }}>
                   {item.icon}
                 </ListItemIcon>
                 <ListItemText
