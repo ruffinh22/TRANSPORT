@@ -1,0 +1,38 @@
+# Stage 1: Build Frontend
+FROM node:18-alpine AS frontend-builder
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN yarn install
+COPY frontend/ .
+RUN yarn build
+
+# Stage 2: Build Backend + Serve
+FROM python:3.12-slim
+WORKDIR /app
+
+# Dépendances système
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Backend
+COPY backend/ ./backend/
+RUN pip install --no-cache-dir -r backend/requirements.txt
+
+# Frontend distribué
+COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
+
+# Configuration
+ENV PYTHONUNBUFFERED=1
+ENV DEBUG=False
+
+WORKDIR /app/backend
+
+# Migrations et collectstatic
+RUN python manage.py collectstatic --noinput 2>/dev/null || true
+
+# Gunicorn
+RUN pip install gunicorn whitenoise
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+
+EXPOSE 8000

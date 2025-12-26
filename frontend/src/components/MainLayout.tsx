@@ -228,7 +228,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <List>
             {menuItems.map((item) => (
               <ListItem
-                button
                 key={item.path}
                 onClick={() => {
                   navigate(item.path)
@@ -278,7 +277,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <List>
             {menuItems.map((item) => (
               <ListItem
-                button
                 key={item.path}
                 onClick={() => {
                   navigate(item.path)
@@ -307,7 +305,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <List>
             {settingsItems.map((item) => (
               <ListItem
-                button
                 key={item.path}
                 onClick={() => {
                   navigate(item.path)

@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: tkf-postgres-prod
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tkf_prod}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: tkf-backend-prod
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - ALLOWED_HOSTS=*
+      - DB_HOST=postgres
+      - DB_NAME=${DB_NAME:-tkf_prod}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-change_me}
+      - SECRET_KEY=${SECRET_KEY:-change_this_secret_key}
+    depends_on:
+      - postgres
+    volumes:
+      - static_volume:/app/backend/staticfiles
+    restart: always
+
+volumes:
+  postgres_prod_data:
+  static_volume:
