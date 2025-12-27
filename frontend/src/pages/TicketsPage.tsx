@@ -12,14 +12,24 @@ import {
   Chip,
   Alert,
   CircularProgress,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material'
 import {
   Add as AddIcon,
   Download as DownloadIcon,
 } from '@mui/icons-material'
 import { MainLayout } from '../components/MainLayout'
-import { ResponsivePageTemplate, ResponsiveTable, ResponsiveFilters } from '../components'
-import { responsiveStyles } from '../styles/responsiveStyles'
+import { GovPageHeader, GovPageWrapper, GovPageFooter } from '../components'
+import { govStyles } from '../styles/govStyles'
 import { ticketService } from '../services'
 
 interface Ticket {
@@ -132,97 +142,158 @@ export const TicketsPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <ResponsivePageTemplate
-        title="Gestion des Billets"
-        subtitle="Consultez et gérez tous vos billets"
-        actions={[
-          <Button
-            key="add"
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-          >
-            Nouveau Billet
-          </Button>,
-        ]}
-      >
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-        <ResponsiveFilters
-          fields={[
-            { name: 'search', label: 'Recherche (nom/email)', value: search, onChange: setSearch },
+      <GovPageWrapper maxWidth="lg">
+        <GovPageHeader
+          title="Gestion des Billets"
+          icon="🎫"
+          subtitle="Consultez et gérez tous vos billets"
+          actions={[
             {
-              name: 'status',
-              label: 'Statut',
-              value: filterStatus,
-              onChange: setFilterStatus,
-              options: [
-                { label: 'Tous', value: 'all' },
-                { label: 'Confirmé', value: 'confirmed' },
-                { label: 'Annulé', value: 'cancelled' },
-                { label: 'Utilisé', value: 'used' },
-              ],
+              label: 'Nouveau Billet',
+              icon: <AddIcon />,
+              onClick: () => handleOpenDialog(),
+              variant: 'primary',
             },
           ]}
-          onApply={() => loadTickets()}
-          onReset={() => {
-            setSearch('')
-            setFilterStatus('all')
-          }}
         />
 
+        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
+        {/* Filtres */}
+        <Paper sx={{ p: 2, mb: 3, ...govStyles.contentCard }}>
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+            <TextField
+              label="Recherche (nom/email)"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              variant="outlined"
+              size="small"
+              fullWidth
+              sx={{ maxWidth: { md: '300px' } }}
+            />
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel>Statut</InputLabel>
+              <Select
+                label="Statut"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="all">Tous</option>
+                <option value="confirmed">Confirmé</option>
+                <option value="cancelled">Annulé</option>
+                <option value="used">Utilisé</option>
+              </Select>
+            </FormControl>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setSearch('')
+                setFilterStatus('all')
+                loadTickets()
+              }}
+              sx={govStyles.govButton.secondary}
+            >
+              Réinitialiser
+            </Button>
+          </Stack>
+        </Paper>
+
+        {/* Table */}
         {loading ? (
-          <Box sx={responsiveStyles.flexCenter}>
-            <CircularProgress />
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+            <CircularProgress sx={{ color: govStyles.colors.primary }} />
           </Box>
         ) : (
-          <ResponsiveTable
-            columns={[
-              { key: 'passenger_name', label: 'Passager' },
-              { key: 'passenger_email', label: 'Email' },
-              { key: 'seat_number', label: 'Siège' },
-              { key: 'price', label: 'Prix (FCFA)' },
-              {
-                key: 'status',
-                label: 'Statut',
-                render: (val) => (
-                  <Chip
-                    label={val}
-                    color={val === 'confirmed' ? 'success' : val === 'cancelled' ? 'error' : 'warning'}
-                    size="small"
-                  />
-                ),
-              },
-              {
-                key: 'actions',
-                label: 'Actions',
-                render: (_, row) => (
-                  <Stack direction="row" spacing={1}>
-                    <Button size="small" variant="text" onClick={() => handleOpenDialog(row)}>
-                      ✏️
-                    </Button>
-                    <Button size="small" variant="text" color="error" onClick={() => handleDelete(row.id)}>
-                      🗑️
-                    </Button>
-                  </Stack>
-                ),
-              },
-            ]}
-            data={filteredTickets}
-            emptyMessage="Aucun billet trouvé"
-          />
+          <TableContainer component={Paper} sx={govStyles.contentCard}>
+            <Table sx={govStyles.table}>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: govStyles.colors.primary }}>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Passager</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Email</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Siège</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="right">Prix</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Statut</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredTickets.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 4, color: '#999' }}>
+                      Aucun billet trouvé
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredTickets.map((ticket) => (
+                    <TableRow key={ticket.id} sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}>
+                      <TableCell>{ticket.passenger_name}</TableCell>
+                      <TableCell>{ticket.passenger_email}</TableCell>
+                      <TableCell>{ticket.seat_number}</TableCell>
+                      <TableCell align="right">{ticket.price.toLocaleString('fr-FR')} CFA</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={
+                            ticket.status === 'confirmed'
+                              ? 'Confirmé'
+                              : ticket.status === 'cancelled'
+                                ? 'Annulé'
+                                : ticket.status === 'used'
+                                  ? 'Utilisé'
+                                  : 'Pending'
+                          }
+                          color={
+                            ticket.status === 'confirmed'
+                              ? 'success'
+                              : ticket.status === 'cancelled'
+                                ? 'error'
+                                : ticket.status === 'used'
+                                  ? 'warning'
+                                  : 'default'
+                          }
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Stack direction="row" spacing={0.5} justifyContent="center">
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={() => handleOpenDialog(ticket)}
+                            sx={{ color: govStyles.colors.primary }}
+                          >
+                            ✏️
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={() => handleDelete(ticket.id)}
+                            sx={{ color: govStyles.colors.danger }}
+                          >
+                            🗑️
+                          </Button>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         )}
 
         {/* Dialog Form */}
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>{editingId ? 'Éditer le billet' : 'Nouveau billet'}</DialogTitle>
-          <DialogContent sx={{ pt: 2 }}>
+          <DialogTitle sx={{ backgroundColor: govStyles.colors.primary, color: 'white', fontWeight: 700 }}>
+            {editingId ? '✏️ Éditer le billet' : '➕ Nouveau billet'}
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
             <Stack spacing={2}>
               <TextField
                 label="Nom du passager"
                 fullWidth
                 value={formData.passenger_name}
                 onChange={(e) => setFormData({ ...formData, passenger_name: e.target.value })}
+                variant="outlined"
               />
               <TextField
                 label="Email"
@@ -230,18 +301,21 @@ export const TicketsPage: React.FC = () => {
                 fullWidth
                 value={formData.passenger_email}
                 onChange={(e) => setFormData({ ...formData, passenger_email: e.target.value })}
+                variant="outlined"
               />
               <TextField
                 label="Téléphone"
                 fullWidth
                 value={formData.passenger_phone}
                 onChange={(e) => setFormData({ ...formData, passenger_phone: e.target.value })}
+                variant="outlined"
               />
               <TextField
                 label="Numéro de siège"
                 fullWidth
                 value={formData.seat_number}
                 onChange={(e) => setFormData({ ...formData, seat_number: e.target.value })}
+                variant="outlined"
               />
               <TextField
                 label="Prix (FCFA)"
@@ -249,17 +323,22 @@ export const TicketsPage: React.FC = () => {
                 fullWidth
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) })}
+                variant="outlined"
               />
             </Stack>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenDialog(false)}>Annuler</Button>
-            <Button variant="contained" onClick={handleSave}>
+          <DialogActions sx={{ p: 2, gap: 1 }}>
+            <Button onClick={() => setOpenDialog(false)} sx={govStyles.govButton.secondary}>
+              Annuler
+            </Button>
+            <Button variant="contained" onClick={handleSave} sx={govStyles.govButton.primary}>
               Sauvegarder
             </Button>
           </DialogActions>
         </Dialog>
-      </ResponsivePageTemplate>
+
+        <GovPageFooter text="Système de Gestion du Transport - Gestion des Billets" />
+      </GovPageWrapper>
     </MainLayout>
   )
 }
