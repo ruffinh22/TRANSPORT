@@ -1,0 +1,150 @@
+/**
+ * Configuration des rôles et permissions du système TKF
+ * Doit correspondre à l'implémentation backend
+ */
+
+export const ROLES = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  ADMIN: 'ADMIN',
+  MANAGER: 'MANAGER',
+  COMPTABLE: 'COMPTABLE',
+  GUICHETIER: 'GUICHETIER',
+  CHAUFFEUR: 'CHAUFFEUR',
+  CONTROLEUR: 'CONTROLEUR',
+  GESTIONNAIRE_COURRIER: 'GESTIONNAIRE_COURRIER',
+} as const
+
+export const ROLE_LABELS = {
+  [ROLES.SUPER_ADMIN]: 'Super Administrateur',
+  [ROLES.ADMIN]: 'Administrateur Système',
+  [ROLES.MANAGER]: 'Manager Opérations',
+  [ROLES.COMPTABLE]: 'Comptable / Manager Finance',
+  [ROLES.GUICHETIER]: 'Guichetier',
+  [ROLES.CHAUFFEUR]: 'Chauffeur',
+  [ROLES.CONTROLEUR]: 'Contrôleur',
+  [ROLES.GESTIONNAIRE_COURRIER]: 'Gestionnaire Courrier',
+} as const
+
+export const PERMISSIONS = {
+  // Users
+  USERS_VIEW: 'users.view_user',
+  USERS_MANAGE: 'users.manage_users',
+
+  // Vehicles
+  VEHICLES_VIEW: 'vehicles.view_vehicle',
+  VEHICLES_MANAGE: 'vehicles.manage_vehicles',
+
+  // Trips
+  TRIPS_VIEW: 'trips.view_trip',
+  TRIPS_MANAGE: 'trips.manage_trips',
+
+  // Tickets
+  TICKETS_VIEW: 'tickets.view_ticket',
+  TICKETS_MANAGE: 'tickets.manage_tickets',
+
+  // Parcels
+  PARCELS_VIEW: 'parcels.view_parcel',
+  PARCELS_MANAGE: 'parcels.manage_parcels',
+
+  // Payments
+  PAYMENTS_VIEW: 'payments.view_payment',
+  PAYMENTS_MANAGE: 'payments.manage_payments',
+
+  // Reports
+  REPORTS_VIEW: 'reports.view_report',
+
+  // Settings
+  SETTINGS_MANAGE: 'settings.manage_settings',
+} as const
+
+/**
+ * Matrice des permissions par rôle
+ * Définit exactement ce que chaque rôle peut faire
+ */
+export const ROLE_PERMISSIONS = {
+  [ROLES.SUPER_ADMIN]: [
+    // Accès complet
+    ...Object.values(PERMISSIONS),
+  ],
+  [ROLES.ADMIN]: [
+    PERMISSIONS.USERS_VIEW,
+    PERMISSIONS.USERS_MANAGE,
+    PERMISSIONS.VEHICLES_VIEW,
+    PERMISSIONS.VEHICLES_MANAGE,
+    PERMISSIONS.TRIPS_VIEW,
+    PERMISSIONS.TRIPS_MANAGE,
+    PERMISSIONS.TICKETS_VIEW,
+    PERMISSIONS.TICKETS_MANAGE,
+    PERMISSIONS.PAYMENTS_VIEW,
+    PERMISSIONS.PAYMENTS_MANAGE,
+    PERMISSIONS.REPORTS_VIEW,
+    PERMISSIONS.SETTINGS_MANAGE,
+  ],
+  [ROLES.MANAGER]: [
+    PERMISSIONS.VEHICLES_VIEW,
+    PERMISSIONS.VEHICLES_MANAGE,
+    PERMISSIONS.TRIPS_VIEW,
+    PERMISSIONS.TRIPS_MANAGE,
+    PERMISSIONS.TICKETS_VIEW,
+    PERMISSIONS.PAYMENTS_VIEW,
+    PERMISSIONS.REPORTS_VIEW,
+  ],
+  [ROLES.COMPTABLE]: [
+    PERMISSIONS.PAYMENTS_VIEW,
+    PERMISSIONS.PAYMENTS_MANAGE,
+    PERMISSIONS.TRIPS_VIEW,
+    PERMISSIONS.TICKETS_VIEW,
+    PERMISSIONS.REPORTS_VIEW,
+  ],
+  [ROLES.GUICHETIER]: [
+    PERMISSIONS.TICKETS_VIEW,
+    PERMISSIONS.TICKETS_MANAGE,
+    PERMISSIONS.TRIPS_VIEW,
+    PERMISSIONS.PAYMENTS_VIEW,
+    PERMISSIONS.PAYMENTS_MANAGE,
+  ],
+  [ROLES.CHAUFFEUR]: [
+    PERMISSIONS.TRIPS_VIEW,
+    PERMISSIONS.TICKETS_VIEW,
+    PERMISSIONS.VEHICLES_VIEW,
+  ],
+  [ROLES.CONTROLEUR]: [
+    PERMISSIONS.TICKETS_VIEW,
+    PERMISSIONS.TICKETS_MANAGE,
+    PERMISSIONS.TRIPS_VIEW,
+    PERMISSIONS.PAYMENTS_VIEW,
+  ],
+  [ROLES.GESTIONNAIRE_COURRIER]: [
+    PERMISSIONS.PARCELS_VIEW,
+    PERMISSIONS.PARCELS_MANAGE,
+    PERMISSIONS.TRIPS_VIEW,
+    PERMISSIONS.PAYMENTS_VIEW,
+  ],
+} as const
+
+/**
+ * Configuration des pages et leurs rôles requis
+ */
+export const PAGE_ROLE_REQUIREMENTS = {
+  '/dashboard': [
+    ROLES.SUPER_ADMIN,
+    ROLES.ADMIN,
+    ROLES.MANAGER,
+    ROLES.COMPTABLE,
+    ROLES.GUICHETIER,
+    ROLES.CHAUFFEUR,
+    ROLES.CONTROLEUR,
+    ROLES.GESTIONNAIRE_COURRIER,
+  ],
+  '/trips': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.CHAUFFEUR],
+  '/tickets': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.GUICHETIER, ROLES.CONTROLEUR],
+  '/parcels': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.GESTIONNAIRE_COURRIER],
+  '/payments': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.COMPTABLE, ROLES.GUICHETIER],
+  '/employees': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER],
+  '/cities': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER],
+  '/reports': [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.MANAGER, ROLES.COMPTABLE],
+  '/settings': [ROLES.SUPER_ADMIN, ROLES.ADMIN],
+} as const
+
+export type Role = typeof ROLES[keyof typeof ROLES]
+export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS]

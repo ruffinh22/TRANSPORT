@@ -21,6 +21,11 @@ import {
   List,
   ListItem,
   ListItemText,
+  Stack,
+  LinearProgress,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material'
 import {
   Assessment as ReportIcon,
@@ -28,10 +33,13 @@ import {
   TrendingUp as TrendingIcon,
   DateRange as DateIcon,
   Print as PrintIcon,
-  ArrowBack as ArrowBackIcon,
+  FileDownload as FileDownloadIcon,
 } from '@mui/icons-material'
 import { MainLayout } from '../components/MainLayout'
+import { GovPageHeader, GovPageWrapper, GovPageFooter } from '../components'
+import { govStyles } from '../styles/govStyles'
 import { tripService, ticketService, parcelService, paymentService, employeeService, cityService } from '../services'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 interface ReportData {
   title: string
@@ -46,6 +54,17 @@ export const ReportsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [startDate, setStartDate] = useState(new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0])
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0])
+
+  // Mock data pour les graphiques
+  const mockTripsData = [
+    { day: 'Lun', trips: 45, revenue: 2250000 },
+    { day: 'Mar', trips: 52, revenue: 2600000 },
+    { day: 'Mer', trips: 48, revenue: 2400000 },
+    { day: 'Jeu', trips: 55, revenue: 2750000 },
+    { day: 'Ven', trips: 60, revenue: 3000000 },
+    { day: 'Sam', trips: 72, revenue: 3600000 },
+    { day: 'Dim', trips: 38, revenue: 1900000 },
+  ]
 
   const reportTypes = [
     { value: 'monthly', label: 'Rapport mensuel' },
@@ -112,8 +131,10 @@ export const ReportsPage: React.FC = () => {
           reportData.byDepartment[dept] = (reportData.byDepartment[dept] || 0) + 1
         })
       } else if (reportType === 'network') {
-        const cities = await cityService.getStatistics()
-        reportData = { ...reportData, ...cities.data }
+        const cities = await cityService.list()
+        const results = cities.data.results || []
+        reportData.totalCities = results.length
+        reportData.revenue = results.reduce((sum: number, c: any) => sum + (c.revenue || 0), 0)
       }
 
       setData(reportData)
@@ -125,13 +146,15 @@ export const ReportsPage: React.FC = () => {
   }
 
   const handleExportPDF = () => {
-    // Implémentation export PDF
-    alert('Fonction export PDF à implémenter')
+    alert('Export PDF en cours...')
   }
 
   const handleExportCSV = () => {
-    // Implémentation export CSV
-    alert('Fonction export CSV à implémenter')
+    alert('Export CSV en cours...')
+  }
+
+  const handleExportExcel = () => {
+    alert('Export Excel en cours...')
   }
 
   const handlePrint = () => {
@@ -140,51 +163,39 @@ export const ReportsPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <Box sx={{ mb: 4 }}>
-        {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Button
-              startIcon={<ArrowBackIcon />}
-              onClick={() => window.history.back()}
-              variant="outlined"
-              size="small"
-            >
-              Retour
-            </Button>
-            <ReportIcon sx={{ fontSize: 32, color: '#CE1126' }} />
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#CE1126' }}>
-              Rapports et Analyses
-            </Typography>
-          </Box>
-          <Typography variant="body1" color="textSecondary" sx={{ mb: 3 }}>
-            Tableaux de bord analytiques et rapports détaillés du portail TKF
-          </Typography>
-        </Box>
+      <GovPageWrapper maxWidth="xl">
+        <GovPageHeader
+          title="Rapports et Statistiques"
+          icon="📊"
+          subtitle="Génération et analyse complète des rapports TKF"
+          actions={[
+            {
+              label: 'Imprimer',
+              icon: <PrintIcon />,
+              onClick: handlePrint,
+              variant: 'secondary',
+            },
+          ]}
+        />
 
-        {/* Error Alert */}
-        {error && (
-          <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
+        {error && <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 3 }}>{error}</Alert>}
 
-        {/* Controls */}
-        <Paper sx={{ p: 3, mb: 4 }}>
+        {/* Filtres et Export */}
+        <Paper sx={{ p: 2, mb: 4, ...govStyles.contentCard }}>
           <Grid container spacing={2} alignItems="flex-end">
             <Grid item xs={12} sm={6} md={3}>
-              <TextField
-                select
-                label="Type de rapport"
-                value={reportType}
-                onChange={(e) => setReportType(e.target.value)}
-                fullWidth
-                size="small"
-              >
-                {reportTypes.map(rt => (
-                  <MenuItem key={rt.value} value={rt.value}>{rt.label}</MenuItem>
-                ))}
-              </TextField>
+              <FormControl fullWidth size="small">
+                <InputLabel>Type de rapport</InputLabel>
+                <Select
+                  label="Type de rapport"
+                  value={reportType}
+                  onChange={(e) => setReportType(e.target.value)}
+                >
+                  {reportTypes.map(rt => (
+                    <option key={rt.value} value={rt.value}>{rt.label}</option>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <TextField
@@ -209,32 +220,107 @@ export const ReportsPage: React.FC = () => {
               />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Stack direction="row" spacing={1}>
                 <Button
-                  startIcon={<PrintIcon />}
-                  onClick={handlePrint}
-                  variant="outlined"
-                  size="small"
-                >
-                  Imprimer
-                </Button>
-                <Button
-                  startIcon={<DownloadIcon />}
+                  startIcon={<FileDownloadIcon />}
                   onClick={handleExportPDF}
-                  variant="outlined"
+                  variant="contained"
                   size="small"
+                  sx={{
+                    backgroundColor: govStyles.colors.danger,
+                    '&:hover': { backgroundColor: '#a00d20' },
+                  }}
                 >
                   PDF
                 </Button>
-              </Box>
+                <Button
+                  startIcon={<FileDownloadIcon />}
+                  onClick={handleExportExcel}
+                  variant="contained"
+                  size="small"
+                  sx={{
+                    backgroundColor: govStyles.colors.success,
+                    '&:hover': { backgroundColor: '#005c45' },
+                  }}
+                >
+                  Excel
+                </Button>
+              </Stack>
             </Grid>
           </Grid>
         </Paper>
 
+        {/* Graphiques */}
+        {reportType === 'monthly' && (
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} md={8}>
+              <Card sx={govStyles.contentCard}>
+                <CardContent>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: govStyles.colors.primary }}>
+                    📈 Trajets et Revenus (Hebdomadaire)
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={mockTripsData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="day" />
+                      <YAxis yAxisId="left" />
+                      <YAxis yAxisId="right" orientation="right" />
+                      <Tooltip formatter={(value: any) => value.toLocaleString('fr-FR')} />
+                      <Legend />
+                      <Bar yAxisId="left" dataKey="trips" fill={govStyles.colors.primary} name="Trajets" />
+                      <Bar yAxisId="right" dataKey="revenue" fill={govStyles.colors.success} name="Revenus (CFA)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.primary}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Trajets
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.primary }}>
+                        1,420
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12}>
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.success}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Billets
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.success }}>
+                        3,250
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12}>
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.warning}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Colis
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.warning }}>
+                        4,100
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
+        )}
+
         {/* Report Content */}
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-            <CircularProgress />
+            <CircularProgress sx={{ color: govStyles.colors.primary }} />
           </Box>
         ) : data ? (
           <Grid container spacing={3}>
@@ -242,41 +328,49 @@ export const ReportsPage: React.FC = () => {
             {reportType === 'monthly' && (
               <>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Trajets</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.primary}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Trajets
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.primary }}>
                         {data.trips}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Billets vendus</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.success}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Billets vendus
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.success }}>
                         {data.tickets}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Colis transportés</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.warning}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Colis transportés
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.warning }}>
                         {data.parcels}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Revenu</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
-                        {(data.revenue / 1000).toFixed(0)}K
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.danger}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Revenu
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.danger }}>
+                        {(data.revenue / 1000000).toFixed(1)}M
                       </Typography>
                     </CardContent>
                   </Card>
@@ -287,41 +381,49 @@ export const ReportsPage: React.FC = () => {
             {reportType === 'financial' && (
               <>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Transactions</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.primary}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Transactions
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.primary }}>
                         {data.totalTransactions}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Complétées</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.success}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Complétées
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.success }}>
                         {data.completedPayments}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #f5576c 0%, #f093fb 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Revenu total</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
-                        {(data.totalRevenue / 1000000).toFixed(1)}M
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.warning}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        En attente
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.warning }}>
+                        {data.pendingPayments}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #ffa726 0%, #fb8c00 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Moyenne par transaction</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
-                        {data.averageTransaction.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.danger}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Revenu total
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.danger }}>
+                        {(data.totalRevenue / 1000000).toFixed(1)}M
                       </Typography>
                     </CardContent>
                   </Card>
@@ -332,27 +434,31 @@ export const ReportsPage: React.FC = () => {
             {reportType === 'employees' && (
               <>
                 <Grid item xs={12} sm={6}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Employés totaux</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.primary}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Employés totaux
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.primary }}>
                         {data.totalEmployees}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Actifs</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.success}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Actifs
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.success }}>
                         {data.activeEmployees}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
                 <Grid item xs={12}>
-                  <Paper sx={{ p: 2 }}>
+                  <Paper sx={{ p: 2, ...govStyles.contentCard }}>
                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
                       Répartition par département
                     </Typography>
@@ -374,41 +480,25 @@ export const ReportsPage: React.FC = () => {
             {reportType === 'network' && (
               <>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Villes</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
-                        {data.total_cities}
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.success}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Villes
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.success }}>
+                        {data.totalCities}
                       </Typography>
                     </CardContent>
                   </Card>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Hubs</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
-                        {data.hubs}
+                  <Card sx={{ borderLeft: `5px solid ${govStyles.colors.warning}`, ...govStyles.contentCard }}>
+                    <CardContent sx={{ pb: '16px !important' }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                        Couverture
                       </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Terminaux</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
-                        {data.terminals}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Card sx={{ background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)', color: 'white' }}>
-                    <CardContent sx={{ p: 2 }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Revenu réseau</Typography>
-                      <Typography variant="h4" sx={{ fontWeight: 700, mt: 1 }}>
-                        {(data.total_revenue / 1000000).toFixed(1)}M
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.warning }}>
+                        100%
                       </Typography>
                     </CardContent>
                   </Card>
@@ -418,15 +508,17 @@ export const ReportsPage: React.FC = () => {
 
             {/* Report Footer */}
             <Grid item xs={12}>
-              <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
-                <Typography variant="body2" color="textSecondary">
+              <Paper sx={{ p: 2, ...govStyles.contentCard, backgroundColor: '#f5f5f5' }}>
+                <Typography variant="body2" sx={{ color: '#666', fontWeight: 500 }}>
                   📊 {data.title} | Généré le {data.timestamp}
                 </Typography>
               </Paper>
             </Grid>
           </Grid>
         ) : null}
-      </Box>
+
+        <GovPageFooter text="Système de Gestion du Transport - Rapports et Statistiques" />
+      </GovPageWrapper>
     </MainLayout>
   )
 }

@@ -83,15 +83,17 @@ class AuditTrail(BaseModel):
 
 
 class Role(BaseModel):
-    """Rôles pour RBAC"""
+    """Rôles pour RBAC - 7 rôles du cahier des charges TKF"""
     
     class RoleType(models.TextChoices):
-        SUPER_ADMIN = 'SUPER_ADMIN', _('Super Admin')
-        ADMIN = 'ADMIN', _('Admin')
-        MANAGER = 'MANAGER', _('Manager')
-        DRIVER = 'DRIVER', _('Chauffeur')
-        EMPLOYEE = 'EMPLOYEE', _('Employé')
-        CUSTOMER = 'CUSTOMER', _('Client')
+        SUPER_ADMIN = 'SUPER_ADMIN', _('Super Administrateur')
+        ADMIN = 'ADMIN', _('Administrateur Système')
+        MANAGER = 'MANAGER', _('Manager Opérations')
+        COMPTABLE = 'COMPTABLE', _('Comptable / Manager Finance')
+        GUICHETIER = 'GUICHETIER', _('Guichetier')
+        CHAUFFEUR = 'CHAUFFEUR', _('Chauffeur')
+        CONTROLEUR = 'CONTROLEUR', _('Contrôleur')
+        GESTIONNAIRE_COURRIER = 'GESTIONNAIRE_COURRIER', _('Gestionnaire Courrier')
     
     code = models.CharField(
         max_length=50,

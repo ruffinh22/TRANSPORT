@@ -8,6 +8,7 @@ export interface User {
   last_name: string
   is_active: boolean
   email_verified: boolean
+  roles?: string[]  // Nouveaux rôles utilisateur
 }
 
 export interface LoginRequest {

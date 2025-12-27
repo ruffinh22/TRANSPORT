@@ -71,6 +71,16 @@ class Command(BaseCommand):
                 'module': 'REPORTS'
             },
             {
+                'code': 'parcels.view_parcel',
+                'name': 'Voir les colis',
+                'module': 'PARCELS'
+            },
+            {
+                'code': 'parcels.manage_parcels',
+                'name': 'Gérer les colis',
+                'module': 'PARCELS'
+            },
+            {
                 'code': 'settings.manage_settings',
                 'name': 'Gérer les paramètres',
                 'module': 'SETTINGS'
@@ -92,33 +102,34 @@ class Command(BaseCommand):
             self.style.SUCCESS(f'✓ {len(permissions_data)} permissions créées')
         )
         
-        # Rôles avec permissions
+        # Rôles avec permissions - 7 rôles du cahier des charges TKF
         roles_data = [
             {
                 'code': 'SUPER_ADMIN',
                 'name': 'Super Administrateur',
-                'description': 'Accès complet au système',
+                'description': 'Accès complet au système - réservé IT',
                 'permissions': [p['code'] for p in permissions_data]
             },
             {
                 'code': 'ADMIN',
-                'name': 'Administrateur',
-                'description': 'Gestion administrative complète',
+                'name': 'Administrateur Système',
+                'description': 'Gestion administrative complète du système',
                 'permissions': [
                     'users.view_user', 'users.manage_users',
                     'vehicles.view_vehicle', 'vehicles.manage_vehicles',
                     'trips.view_trip', 'trips.manage_trips',
                     'tickets.view_ticket', 'tickets.manage_tickets',
                     'payments.view_payment', 'payments.manage_payments',
-                    'reports.view_report'
+                    'reports.view_report',
+                    'settings.manage_settings'
                 ]
             },
             {
                 'code': 'MANAGER',
-                'name': 'Manager',
-                'description': 'Gestion opérationnelle',
+                'name': 'Manager Opérations',
+                'description': 'Gestion opérationnelle des trajets et véhicules',
                 'permissions': [
-                    'vehicles.view_vehicle',
+                    'vehicles.view_vehicle', 'vehicles.manage_vehicles',
                     'trips.view_trip', 'trips.manage_trips',
                     'tickets.view_ticket',
                     'payments.view_payment',
@@ -126,31 +137,53 @@ class Command(BaseCommand):
                 ]
             },
             {
-                'code': 'DRIVER',
-                'name': 'Chauffeur',
-                'description': 'Chauffeur de véhicule',
+                'code': 'COMPTABLE',
+                'name': 'Comptable / Manager Finance',
+                'description': 'Gestion financière, recettes et rapports comptables',
                 'permissions': [
+                    'payments.view_payment', 'payments.manage_payments',
                     'trips.view_trip',
-                    'tickets.view_ticket'
+                    'tickets.view_ticket',
+                    'reports.view_report'
                 ]
             },
             {
-                'code': 'EMPLOYEE',
-                'name': 'Employé',
-                'description': 'Employé de l\'entreprise',
+                'code': 'GUICHETIER',
+                'name': 'Guichetier',
+                'description': 'Vente de tickets, gestion caisses et enregistrement passagers',
+                'permissions': [
+                    'tickets.view_ticket', 'tickets.manage_tickets',
+                    'trips.view_trip',
+                    'payments.view_payment', 'payments.manage_payments'
+                ]
+            },
+            {
+                'code': 'CHAUFFEUR',
+                'name': 'Chauffeur',
+                'description': 'Conduite véhicule et suivi des trajets assignés',
                 'permissions': [
                     'trips.view_trip',
                     'tickets.view_ticket',
+                    'vehicles.view_vehicle'
+                ]
+            },
+            {
+                'code': 'CONTROLEUR',
+                'name': 'Contrôleur',
+                'description': 'Validation des tickets et contrôle des passagers',
+                'permissions': [
+                    'tickets.view_ticket', 'tickets.manage_tickets',
+                    'trips.view_trip',
                     'payments.view_payment'
                 ]
             },
             {
-                'code': 'CUSTOMER',
-                'name': 'Client',
-                'description': 'Client utilisateur',
+                'code': 'GESTIONNAIRE_COURRIER',
+                'name': 'Gestionnaire Courrier',
+                'description': 'Gestion des colis, suivi et livraison',
                 'permissions': [
+                    'parcels.view_parcel', 'parcels.manage_parcels',
                     'trips.view_trip',
-                    'tickets.view_ticket',
                     'payments.view_payment'
                 ]
             },

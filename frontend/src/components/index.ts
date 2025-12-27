@@ -4,6 +4,9 @@ export { GovernmentHeader } from './GovernmentHeader'
 export { GovernmentFooter } from './GovernmentFooter'
 export { EnhancedHeader } from './EnhancedHeader'
 export { ProtectedRoute } from './ProtectedRoute'
+export { RoleBasedRoute } from './RoleBasedRoute'
+export { AccessDenied } from './AccessDenied'
+export { RoleBasedMenu } from './RoleBasedMenu'
 export { PaginationComponent } from './PaginationComponent'
 export { AdvancedPagination } from './AdvancedPagination'
 export { StatisticsChart } from './StatisticsChart'
@@ -21,4 +24,3 @@ export { ResponsiveForm } from './ResponsiveForm'
 
 // Composants Gouvernementaux
 export { GovPageHeader, GovPageWrapper, GovPageFooter } from './GovPageComponents'
-
