@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Container, Typography, Divider, Button, Tab, Tabs } from '@mui/material';
+import { Box, Container, Typography, Divider, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { Dashboard } from './Dashboard';
 import AdminDashboard from './admin/AdminDashboard';
@@ -9,7 +9,6 @@ import ChauffeurDashboard from './chauffeur/ChauffeurDashboard';
 
 export const DashboardRouter: React.FC = () => {
   const navigate = useNavigate();
-  const [tabValue, setTabValue] = React.useState(0);
   
   // Récupérer l'utilisateur depuis localStorage pour éviter dépendance Redux
   const userStr = localStorage.getItem('user');
@@ -19,34 +18,8 @@ export const DashboardRouter: React.FC = () => {
   // Determine which dashboard to show based on role priority
   const getDashboard = () => {
     if (roles.includes('ADMIN')) {
-      // Pour ADMIN: afficher le Dashboard général avec onglet AdminDashboard
-      return (
-        <Box>
-          <Tabs 
-            value={tabValue} 
-            onChange={(_, newValue) => setTabValue(newValue)}
-            sx={{
-              borderBottom: '2px solid #ddd',
-              mb: 2,
-              '& .MuiTab-root': {
-                textTransform: 'uppercase',
-                fontWeight: 600,
-              },
-              '& .Mui-selected': {
-                color: '#003D66',
-              },
-              '& .MuiTabs-indicator': {
-                backgroundColor: '#003D66',
-              },
-            }}
-          >
-            <Tab label="📊 Tableau de Bord" />
-            <Tab label="🔧 Gestion Système" />
-          </Tabs>
-          {tabValue === 0 && <Dashboard />}
-          {tabValue === 1 && <AdminDashboard />}
-        </Box>
-      );
+      // Pour ADMIN: afficher le Dashboard avec les onglets intégrés
+      return <Dashboard />;
     } else if (roles.includes('COMPTABLE')) {
       return <ComptableDashboard />;
     } else if (roles.includes('GUICHETIER')) {
@@ -71,54 +44,7 @@ export const DashboardRouter: React.FC = () => {
 
   return (
     <Box>
-      {/* Role Badge */}
-      <Box
-        sx={{
-          backgroundColor: '#f5f5f5',
-          py: 2,
-          px: 3,
-          borderBottom: '2px solid #ddd',
-          mb: 2,
-        }}
-      >
-        <Container maxWidth="lg">
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-            <Box>
-              <Typography sx={{ fontSize: '0.875rem', color: 'textSecondary' }}>
-                Rôle Actuel:
-              </Typography>
-              <Typography sx={{ fontWeight: 'bold', color: '#003D66', fontSize: '1.1rem' }}>
-                {getRoleName()}
-              </Typography>
-            </Box>
-            {roles.length > 1 && (
-              <Box>
-                <Typography sx={{ fontSize: '0.875rem', color: 'textSecondary', mb: 1 }}>
-                  Vous avez accès à {roles.length} rôle(s):
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  {roles.map((role) => (
-                    <Typography
-                      key={role}
-                      sx={{
-                        fontSize: '0.75rem',
-                        backgroundColor: '#007A5E',
-                        color: 'white',
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: 1,
-                        fontWeight: '500',
-                      }}
-                    >
-                      {role}
-                    </Typography>
-                  ))}
-                </Box>
-              </Box>
-            )}
-          </Box>
-        </Container>
-      </Box>
+      {/* Dashboard Content */}
 
       {/* Dashboard Content */}
       {getDashboard()}

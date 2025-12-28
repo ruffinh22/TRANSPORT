@@ -126,7 +126,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if not request.user.has_role('ADMIN'):
             # Retourner seulement l'utilisateur courant
             return Response(
-                UserDetailSerializer(request.user).data
+                [UserDetailSerializer(request.user).data]
             )
         
         return super().list(request, *args, **kwargs)
