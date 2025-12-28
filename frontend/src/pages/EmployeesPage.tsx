@@ -79,11 +79,21 @@ export const EmployeesPage: React.FC = () => {
     try {
       const params = filterStatus !== 'all' ? { status: filterStatus } : {}
       const response = await employeeService.list(params)
-      setEmployees(response.data.results || response.data || [])
+      
+      // Extraire les données de manière sûre
+      let data: Employee[] = []
+      if (response.data && Array.isArray(response.data)) {
+        data = response.data
+      } else if (response.data && response.data.results && Array.isArray(response.data.results)) {
+        data = response.data.results
+      }
+      
+      setEmployees(data)
       setError(null)
     } catch (err) {
       setError('Erreur au chargement des employés')
       console.error(err)
+      setEmployees([])
     }
     setLoading(false)
   }

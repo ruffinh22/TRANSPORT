@@ -18,6 +18,19 @@ import {
   Chip,
   Tab,
   Tabs,
+  Alert,
+  CircularProgress,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+} from '@mui/material';
+import {
+  Download as DownloadIcon,
+  Filter as FilterIcon,
+  TrendingUp as TrendingUpIcon,
+} from '@mui/icons-material';
+import {
   LineChart,
   Line,
   XAxis,
@@ -31,19 +44,7 @@ import {
   Cell,
   BarChart,
   Bar,
-  Alert,
-  CircularProgress,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-} from '@mui/material';
-import {
-  Download as DownloadIcon,
-  Filter as FilterIcon,
-  TrendingUp as TrendingUpIcon,
-} from '@mui/icons-material';
-import { useAppDispatch, useAppSelector } from '../../hooks/redux';
+} from 'recharts';
 
 interface TabPanelProps {
   children?: React.ReactNode;

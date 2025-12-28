@@ -206,7 +206,9 @@ class Notification(BaseModel):
     user = models.ForeignKey(
         'users.User',
         on_delete=models.CASCADE,
-        related_name='notifications'
+        related_name='notifications',
+        null=True,
+        blank=True
     )
     notification_type = models.CharField(
         max_length=50,

@@ -1,22 +1,52 @@
 import React from 'react';
-import { Box, Container, Typography, Divider, Button } from '@mui/material';
-import { useAppSelector } from '../hooks/redux';
+import { Box, Container, Typography, Divider, Button, Tab, Tabs } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Dashboard } from './Dashboard';
 import AdminDashboard from './admin/AdminDashboard';
 import ComptableDashboard from './comptable/ComptableDashboard';
 import GuichetierDashboard from './guichetier/GuichetierDashboard';
 import ChauffeurDashboard from './chauffeur/ChauffeurDashboard';
-import { useNavigate } from 'react-router-dom';
 
 export const DashboardRouter: React.FC = () => {
   const navigate = useNavigate();
-  const user = useAppSelector((state) => state.auth?.user);
+  const [tabValue, setTabValue] = React.useState(0);
+  
+  // Récupérer l'utilisateur depuis localStorage pour éviter dépendance Redux
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
   const roles = user?.roles || [];
 
   // Determine which dashboard to show based on role priority
-  // ADMIN is the highest priority
   const getDashboard = () => {
     if (roles.includes('ADMIN')) {
-      return <AdminDashboard />;
+      // Pour ADMIN: afficher le Dashboard général avec onglet AdminDashboard
+      return (
+        <Box>
+          <Tabs 
+            value={tabValue} 
+            onChange={(_, newValue) => setTabValue(newValue)}
+            sx={{
+              borderBottom: '2px solid #ddd',
+              mb: 2,
+              '& .MuiTab-root': {
+                textTransform: 'uppercase',
+                fontWeight: 600,
+              },
+              '& .Mui-selected': {
+                color: '#003D66',
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#003D66',
+              },
+            }}
+          >
+            <Tab label="📊 Tableau de Bord" />
+            <Tab label="🔧 Gestion Système" />
+          </Tabs>
+          {tabValue === 0 && <Dashboard />}
+          {tabValue === 1 && <AdminDashboard />}
+        </Box>
+      );
     } else if (roles.includes('COMPTABLE')) {
       return <ComptableDashboard />;
     } else if (roles.includes('GUICHETIER')) {

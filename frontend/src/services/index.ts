@@ -119,11 +119,11 @@ export const paymentService = {
 }
 
 export const employeeService = {
-  list: (params?: any) => apiClient.get('/employees/', { params }),
-  get: (id: number) => apiClient.get(`/employees/${id}/`),
-  create: (data: any) => apiClient.post('/employees/', data),
-  update: (id: number, data: any) => apiClient.put(`/employees/${id}/`, data),
-  delete: (id: number) => apiClient.delete(`/employees/${id}/`),
+  list: (params?: any) => apiClient.get('/employees/employees/', { params }),
+  get: (id: number) => apiClient.get(`/employees/employees/${id}/`),
+  create: (data: any) => apiClient.post('/employees/employees/', data),
+  update: (id: number, data: any) => apiClient.put(`/employees/employees/${id}/`, data),
+  delete: (id: number) => apiClient.delete(`/employees/employees/${id}/`),
   getStatistics: () => apiClient.get('/employees/statistics/'),
   getLeaves: (id: number) => apiClient.get(`/employees/${id}/leaves/`),
   getPerformance: (id: number) => apiClient.get(`/employees/${id}/performance/`),

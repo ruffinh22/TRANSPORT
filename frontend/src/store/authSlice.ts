@@ -11,7 +11,7 @@ export interface AuthState {
 }
 
 const initialState: AuthState = {
-  user: null,
+  user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null,
   accessToken: localStorage.getItem('access_token'),
   refreshToken: localStorage.getItem('refresh_token'),
   loading: false,
@@ -75,6 +75,7 @@ const authSlice = createSlice({
       state.error = null
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user')
     },
     clearError: (state) => {
       state.error = null
@@ -92,6 +93,8 @@ const authSlice = createSlice({
         state.accessToken = action.payload.access
         state.refreshToken = action.payload.refresh
         state.isAuthenticated = true
+        // Stocker l'utilisateur dans localStorage pour le DashboardRouter
+        localStorage.setItem('user', JSON.stringify(action.payload.user))
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false

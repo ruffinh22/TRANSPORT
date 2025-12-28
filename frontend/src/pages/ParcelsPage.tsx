@@ -74,7 +74,15 @@ export const ParcelsPage: React.FC = () => {
     try {
       const params = filterStatus !== 'all' ? { status: filterStatus } : {}
       const response = await parcelService.list(params)
-      setParcels(response.data.results || response.data || [])
+      
+      let data: Parcel[] = []
+      if (response.data && Array.isArray(response.data)) {
+        data = response.data
+      } else if (response.data && response.data.results && Array.isArray(response.data.results)) {
+        data = response.data.results
+      }
+      
+      setParcels(data)
       setError(null)
     } catch (err) {
       setError('Erreur au chargement des colis')

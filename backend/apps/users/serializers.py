@@ -13,9 +13,13 @@ logger = logging.getLogger(__name__)
 class UserDetailSerializer(serializers.ModelSerializer):
     """Serializer complet pour un utilisateur"""
     
-    roles = serializers.StringRelatedField(many=True, read_only=True)
+    roles = serializers.SerializerMethodField()
     is_fully_verified = serializers.ReadOnlyField()
     full_name = serializers.SerializerMethodField()
+    
+    def get_roles(self, obj):
+        """Retourner les codes des rôles au lieu des noms"""
+        return list(obj.roles.values_list('code', flat=True))
     
     class Meta:
         model = User
@@ -43,21 +47,22 @@ class UserListSerializer(serializers.ModelSerializer):
     """Serializer allégé pour les listes"""
     
     full_name = serializers.SerializerMethodField()
-    role_count = serializers.SerializerMethodField()
+    roles = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'phone', 'full_name', 'avatar',
-            'is_active', 'is_blocked', 'role_count', 'created_at'
+            'id', 'email', 'phone', 'first_name', 'last_name', 'full_name', 'avatar',
+            'is_active', 'is_blocked', 'roles', 'created_at'
         ]
         read_only_fields = fields
     
     def get_full_name(self, obj):
         return obj.get_full_name()
     
-    def get_role_count(self, obj):
-        return obj.roles.count()
+    def get_roles(self, obj):
+        """Retourner les codes des rôles"""
+        return list(obj.roles.values_list('code', flat=True))
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

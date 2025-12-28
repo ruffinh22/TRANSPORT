@@ -8,9 +8,10 @@ import {
   Button,
   CircularProgress,
   Grid,
-  useMediaQuery,
   useTheme,
+  Tab,
 } from '@mui/material'
+import { TabContext, TabList, TabPanel } from '@mui/lab'
 import {
   TrendingUp as TrendingIcon,
   DirectionsRun as TripsIcon,
@@ -26,6 +27,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '../hooks'
 import { MainLayout } from '../components/MainLayout'
+import { AdminDashboard } from './admin/AdminDashboard'
 import { tripService, ticketService, parcelService, paymentService, employeeService, cityService } from '../services'
 
 interface Stats {
@@ -38,10 +40,75 @@ interface Stats {
   cities: number
 }
 
+// Permissions par rôle avec actions CRUD
+interface RolePermissions {
+  view: string[]
+  create: string[]
+  edit: string[]
+  delete: string[]
+}
+
+const ROLE_PERMISSIONS: Record<string, RolePermissions> = {
+  ADMIN: {
+    view: ['trips', 'tickets', 'parcels', 'payments', 'revenue', 'employees', 'cities', 'reports', 'manage_users'],
+    create: ['trips', 'tickets', 'parcels', 'payments', 'employees', 'cities', 'users'],
+    edit: ['trips', 'tickets', 'parcels', 'payments', 'employees', 'cities', 'users'],
+    delete: ['trips', 'tickets', 'parcels', 'payments', 'employees', 'cities', 'users'],
+  },
+  COMPTABLE: {
+    view: ['payments', 'revenue', 'reports', 'employees'],
+    create: ['payments', 'reports'],
+    edit: ['payments', 'reports'],
+    delete: [],
+  },
+  GUICHETIER: {
+    view: ['tickets', 'parcels', 'trips'],
+    create: ['tickets', 'parcels'],
+    edit: ['tickets', 'parcels'],
+    delete: [],
+  },
+  CHAUFFEUR: {
+    view: ['trips', 'tickets'],
+    create: [],
+    edit: ['trips'],
+    delete: [],
+  },
+  CONTROLEUR: {
+    view: ['tickets', 'trips', 'employees'],
+    create: [],
+    edit: ['trips', 'tickets'],
+    delete: [],
+  },
+  GESTIONNAIRE_COURRIER: {
+    view: ['parcels', 'cities'],
+    create: ['parcels'],
+    edit: ['parcels'],
+    delete: [],
+  },
+  CLIENT: {
+    view: ['trips', 'tickets', 'parcels'],
+    create: [],
+    edit: [],
+    delete: [],
+  },
+}
+
+// Titres de rôles en français
+const ROLE_TITLES: Record<string, string> = {
+  ADMIN: 'Administrateur',
+  COMPTABLE: 'Comptable',
+  GUICHETIER: 'Guichetier',
+  CHAUFFEUR: 'Chauffeur',
+  CONTROLEUR: 'Contrôleur',
+  GESTIONNAIRE_COURRIER: 'Gestionnaire de Courrier',
+  CLIENT: 'Client',
+}
+
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate()
   const { user } = useAppSelector((state) => state.auth)
   const theme = useTheme()
+  const [tabValue, setTabValue] = useState('0')
 
   const [stats, setStats] = useState<Stats>({
     trips: 0,
@@ -54,21 +121,40 @@ export const Dashboard: React.FC = () => {
   })
   const [loading, setLoading] = useState(true)
 
+  // Déterminer le rôle principal de l'utilisateur
+  const userRole = user?.roles?.[0] || 'CLIENT'
+  const isAdmin = user?.roles?.includes('ADMIN')
+  const userPermissions = ROLE_PERMISSIONS[userRole as keyof typeof ROLE_PERMISSIONS] || ROLE_PERMISSIONS.CLIENT
+
+  // Fonctions pour vérifier les permissions
+  const hasPermission = (action: 'view' | 'create' | 'edit' | 'delete', resource: string): boolean => {
+    return userPermissions[action].includes(resource)
+  }
+
+  const canView = (resource: string): boolean => hasPermission('view', resource)
+  const canCreate = (resource: string): boolean => hasPermission('create', resource)
+  const canEdit = (resource: string): boolean => hasPermission('edit', resource)
+  const canDelete = (resource: string): boolean => hasPermission('delete', resource)
+
   useEffect(() => {
     loadDashboardData()
   }, [])
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+    setTabValue(newValue)
+  }
 
   const loadDashboardData = async () => {
     try {
       setLoading(true)
 
       const [tripsRes, ticketsRes, parcelsRes, paymentsRes, employeesRes, citiesRes] = await Promise.all([
-        tripService.list().catch(() => ({ data: [] })),
-        ticketService.list().catch(() => ({ data: [] })),
-        parcelService.list().catch(() => ({ data: [] })),
-        paymentService.list().catch(() => ({ data: [] })),
-        employeeService.list().catch(() => ({ data: [] })),
-        cityService.list().catch(() => ({ data: [] })),
+        canView('trips') ? tripService.list().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+        canView('tickets') ? ticketService.list().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+        canView('parcels') ? parcelService.list().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+        canView('payments') ? paymentService.list().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+        canView('employees') ? employeeService.list().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+        canView('cities') ? cityService.list().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
       ])
 
       const getLength = (res: any) => {
@@ -279,7 +365,7 @@ export const Dashboard: React.FC = () => {
                   fontSize: '0.95rem',
                 }}
               >
-                Système de Gestion du Transport - Burkina Faso
+                {ROLE_TITLES[userRole as keyof typeof ROLE_TITLES]} • Système de Gestion du Transport
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' }, width: { xs: '100%', md: 'auto' } }}>
@@ -289,147 +375,45 @@ export const Dashboard: React.FC = () => {
           </Box>
           {user && (
             <Typography variant="body2" sx={{ color: '#007A5E', fontWeight: 500 }}>
-              Bienvenue, <strong>{user.first_name} {user.last_name}</strong> • Connecté depuis le {new Date().toLocaleDateString('fr-FR')}
+              Bienvenue, <strong>{user.firstName} {user.lastName}</strong> • {ROLE_TITLES[userRole as keyof typeof ROLE_TITLES]} • Connecté depuis le {new Date().toLocaleDateString('fr-FR')}
             </Typography>
           )}
         </Box>
 
-        {/* Grille Principale de Statistiques */}
-        <Grid container spacing={2.5} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <GovStatCard
-              title="Trajets Actifs"
-              value={stats.trips}
-              icon={TripsIcon}
-              onClick={() => navigate('/trips')}
-              color="#003D66"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <GovStatCard
-              title="Billets Vendus"
-              value={stats.tickets}
-              icon={TicketsIcon}
-              onClick={() => navigate('/tickets')}
-              color="#CE1126"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <GovStatCard
-              title="Colis Transportés"
-              value={stats.parcels}
-              icon={ParcelsIcon}
-              onClick={() => navigate('/parcels')}
-              color="#007A5E"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <GovStatCard
-              title="Employés Actifs"
-              value={stats.employees}
-              icon={EmployeesIcon}
-              onClick={() => navigate('/employees')}
-              color="#FFD700"
-            />
-          </Grid>
-        </Grid>
+        {/* Onglets pour les admins */}
+        {isAdmin && (
+          <Box sx={{ borderBottom: 3, borderColor: 'divider', mb: 4 }}>
+            <TabContext value={tabValue}>
+              <TabList onChange={handleTabChange} aria-label="dashboard tabs">
+                <Tab label="📊 Tableau de Bord" value="0" />
+                <Tab label="🔧 Gestion Système" value="1" />
+              </TabList>
+              <TabPanel value="0" sx={{ p: 0, pt: 3 }}>
+                <DashboardContent
+                  hasPermission={hasPermission}
+                  stats={stats}
+                  navigate={navigate}
+                  GovStatCard={GovStatCard}
+                  GovActionButton={GovActionButton}
+                />
+              </TabPanel>
+              <TabPanel value="1">
+                <AdminDashboard />
+              </TabPanel>
+            </TabContext>
+          </Box>
+        )}
 
-        {/* Rangée Secondaire */}
-        <Grid container spacing={2.5} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={6}>
-            {/* Revenu Total */}
-            <Card
-              sx={{
-                backgroundColor: '#003D66',
-                color: '#ffffff',
-                borderRadius: '8px',
-                border: '2px solid #003D66',
-                boxShadow: '0 4px 16px rgba(0, 61, 102, 0.2)',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: '-50px',
-                  right: '-50px',
-                  width: '200px',
-                  height: '200px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(206, 17, 38, 0.1)',
-                }}
-              />
-              <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <Box>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        opacity: 0.9,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                      }}
-                    >
-                      Chiffre d'Affaires Total
-                    </Typography>
-                    <Typography variant="h3" sx={{ fontWeight: 700, mt: 1 }}>
-                      {stats.revenue.toLocaleString('fr-FR')} CFA
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.85, mt: 1 }}>
-                      Paiements complétés
-                    </Typography>
-                  </Box>
-                  <TrendingIcon sx={{ fontSize: 40, opacity: 0.6 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            {/* Villes et Couverture */}
-            <GovStatCard
-              title="Villes Desservies"
-              value={stats.cities}
-              icon={CitiesIcon}
-              onClick={() => navigate('/cities')}
-              color="#CE1126"
-            />
-          </Grid>
-        </Grid>
-
-        {/* Actions Rapides Professionnelles */}
-        <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 700,
-              color: '#003D66',
-              mb: 2,
-              fontSize: '1.1rem',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
-          >
-            📋 Actions Disponibles
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
-              <GovActionButton label="Ajouter un Trajet" icon={ScheduleIcon} onClick={() => navigate('/trips')} />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <GovActionButton label="Vendre un Billet" icon={TicketsIcon} onClick={() => navigate('/tickets')} />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <GovActionButton label="Gestion RH" icon={EmployeesIcon} onClick={() => navigate('/employees')} />
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <GovActionButton label="Rapports" icon={ReportsIcon} onClick={() => navigate('/reports')} />
-            </Grid>
-          </Grid>
-        </Box>
+        {/* Contenu pour les non-admins */}
+        {!isAdmin && (
+          <DashboardContent
+            hasPermission={hasPermission}
+            stats={stats}
+            navigate={navigate}
+            GovStatCard={GovStatCard}
+            GovActionButton={GovActionButton}
+          />
+        )}
 
         {/* Pied de page officiel */}
         <Box
@@ -452,5 +436,253 @@ export const Dashboard: React.FC = () => {
         </Box>
       </Container>
     </MainLayout>
+  )
+}
+
+const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stats, navigate, GovStatCard, GovActionButton }) => {
+  return (
+    <>
+      {/* PREMIÈRE RANGÉE - Cartes principales TOUJOURS VISIBLES */}
+      <Grid container spacing={2.5} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <GovStatCard
+            title="Colis en Attente"
+            value={stats.parcels}
+            icon={ParcelsIcon}
+            onClick={() => navigate('/parcels')}
+            color="#007A5E"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <GovStatCard
+            title="Tickets Ouverts"
+            value={stats.tickets}
+            icon={TicketsIcon}
+            onClick={() => navigate('/tickets')}
+            color="#CE1126"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <GovStatCard
+            title="Paiements Pendants"
+            value={stats.payments}
+            icon={TrendingIcon}
+            onClick={() => navigate('/payments')}
+            color="#003D66"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <GovStatCard
+            title="Notifications"
+            value="2"
+            icon={DownloadIcon}
+            onClick={() => {}}
+            color="#FFD700"
+          />
+        </Grid>
+      </Grid>
+
+      {/* DEUXIÈME RANGÉE - Trajets et Employés TOUJOURS VISIBLES */}
+      <Grid container spacing={2.5} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={6}>
+          <GovStatCard
+            title="Trajets Actifs"
+            value={stats.trips}
+            icon={TripsIcon}
+            onClick={() => navigate('/trips')}
+            color="#003D66"
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <GovStatCard
+            title="Employés Actifs"
+            value={stats.employees}
+            icon={EmployeesIcon}
+            onClick={() => navigate('/employees')}
+            color="#FFD700"
+          />
+        </Grid>
+      </Grid>
+
+      {/* TROISIÈME RANGÉE - Revenu et Villes TOUJOURS VISIBLES */}
+      <Grid container spacing={2.5} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={6}>
+          <Card
+            sx={{
+              backgroundColor: '#003D66',
+              color: '#ffffff',
+              borderRadius: '8px',
+              border: '2px solid #003D66',
+              boxShadow: '0 4px 16px rgba(0, 61, 102, 0.2)',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '-50px',
+                right: '-50px',
+                width: '200px',
+                height: '200px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(206, 17, 38, 0.1)',
+              }}
+            />
+            <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Box>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      opacity: 0.9,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    Chiffre d'Affaires Total
+                  </Typography>
+                  <Typography variant="h3" sx={{ fontWeight: 700, mt: 1 }}>
+                    {stats.revenue.toLocaleString('fr-FR')} CFA
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.85, mt: 1 }}>
+                    Paiements complétés
+                  </Typography>
+                </Box>
+                <TrendingIcon sx={{ fontSize: 40, opacity: 0.6 }} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <GovStatCard
+            title="Villes Desservies"
+            value={stats.cities}
+            icon={CitiesIcon}
+            onClick={() => navigate('/cities')}
+            color="#CE1126"
+          />
+        </Grid>
+      </Grid>
+
+      {/* ACTIONS RAPIDES - FILTRÉES par permissions CRUD */}
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: 700,
+            color: '#003D66',
+            mb: 2,
+            fontSize: '1.1rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}
+        >
+          📋 Actions Disponibles
+        </Typography>
+        <Grid container spacing={2}>
+          {/* Actions Trajets - SEULEMENT si CREATE ou EDIT */}
+          {(hasPermission('create', 'trips') || hasPermission('edit', 'trips')) && (
+            <Grid item xs={12} sm={6} md={3}>
+              <GovActionButton 
+                label={hasPermission('create', 'trips') ? "➕ Ajouter Trajet" : "✏️ Gérer Trajets"} 
+                icon={ScheduleIcon} 
+                onClick={() => navigate(hasPermission('create', 'trips') ? '/trips?action=create' : '/trips')} 
+              />
+            </Grid>
+          )}
+
+          {/* Actions Tickets - SEULEMENT si CREATE ou EDIT */}
+          {(hasPermission('create', 'tickets') || hasPermission('edit', 'tickets')) && (
+            <Grid item xs={12} sm={6} md={3}>
+              <GovActionButton 
+                label={hasPermission('create', 'tickets') ? "➕ Vendre Billet" : "✏️ Gérer Billets"} 
+                icon={TicketsIcon} 
+                onClick={() => navigate(hasPermission('create', 'tickets') ? '/tickets?action=create' : '/tickets')} 
+              />
+            </Grid>
+          )}
+
+          {/* Actions Colis - SEULEMENT si CREATE ou EDIT */}
+          {(hasPermission('create', 'parcels') || hasPermission('edit', 'parcels')) && (
+            <Grid item xs={12} sm={6} md={3}>
+              <GovActionButton 
+                label={hasPermission('create', 'parcels') ? "➕ Ajouter Colis" : "✏️ Gérer Colis"} 
+                icon={ParcelsIcon} 
+                onClick={() => navigate(hasPermission('create', 'parcels') ? '/parcels?action=create' : '/parcels')} 
+              />
+            </Grid>
+          )}
+
+          {/* Actions Paiements - SEULEMENT si CREATE ou EDIT */}
+          {(hasPermission('create', 'payments') || hasPermission('edit', 'payments')) && (
+            <Grid item xs={12} sm={6} md={3}>
+              <GovActionButton 
+                label={hasPermission('create', 'payments') ? "➕ Enregistrer Paiement" : "✏️ Gérer Paiements"} 
+                icon={TrendingIcon} 
+                onClick={() => navigate(hasPermission('create', 'payments') ? '/payments?action=create' : '/payments')} 
+              />
+            </Grid>
+          )}
+
+          {/* Actions Employés - SEULEMENT si CREATE ou EDIT */}
+          {(hasPermission('create', 'employees') || hasPermission('edit', 'employees')) && (
+            <Grid item xs={12} sm={6} md={3}>
+              <GovActionButton 
+                label={hasPermission('create', 'employees') ? "➕ Ajouter Employé" : "✏️ Gérer Employés"} 
+                icon={EmployeesIcon} 
+                onClick={() => navigate(hasPermission('create', 'employees') ? '/employees?action=create' : '/employees')} 
+              />
+            </Grid>
+          )}
+
+          {/* Actions Rapports - SEULEMENT si CREATE */}
+          {hasPermission('create', 'reports') && (
+            <Grid item xs={12} sm={6} md={3}>
+              <GovActionButton 
+                label="📊 Générer Rapport" 
+                icon={ReportsIcon} 
+                onClick={() => navigate('/reports?action=create')} 
+              />
+            </Grid>
+          )}
+
+          {/* Actions Gestion Utilisateurs - SEULEMENT pour ADMIN */}
+          {(hasPermission('create', 'users') || hasPermission('edit', 'users')) && (
+            <Grid item xs={12} sm={6} md={3}>
+              <GovActionButton 
+                label={hasPermission('create', 'users') ? "➕ Nouvel Utilisateur" : "✏️ Gérer Utilisateurs"} 
+                icon={EmployeesIcon} 
+                onClick={() => navigate(hasPermission('create', 'users') ? '/users?action=create' : '/users')} 
+              />
+            </Grid>
+          )}
+        </Grid>
+
+        {/* Message si PAS d'actions disponibles */}
+        {!hasPermission('create', 'trips') && 
+         !hasPermission('edit', 'trips') && 
+         !hasPermission('create', 'tickets') && 
+         !hasPermission('edit', 'tickets') && 
+         !hasPermission('create', 'parcels') && 
+         !hasPermission('edit', 'parcels') && 
+         !hasPermission('create', 'payments') && 
+         !hasPermission('edit', 'payments') && 
+         !hasPermission('create', 'employees') && 
+         !hasPermission('edit', 'employees') && 
+         !hasPermission('create', 'reports') && 
+         !hasPermission('create', 'users') && 
+         !hasPermission('edit', 'users') && (
+          <Box sx={{ p: 3, backgroundColor: '#f0f0f0', borderRadius: '8px', textAlign: 'center', mt: 2 }}>
+            <Typography variant="body2" sx={{ color: '#666' }}>
+              👁️ Mode lecture seule - Vous pouvez consulter les données mais pas les modifier
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    </>
   )
 }

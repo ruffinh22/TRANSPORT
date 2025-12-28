@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 interface User {
   id: string;
@@ -54,8 +54,39 @@ export const userManagementService = {
           Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
       });
-      return response.data;
+      
+      // Handle both paginated response and single user response
+      let data = response.data;
+      
+      // If it's a paginated response with results property
+      if (data && typeof data === 'object' && 'results' in data && Array.isArray(data.results)) {
+        data = data.results;
+      }
+      // If it's a single user object, wrap it in an array
+      else if (data && typeof data === 'object' && !Array.isArray(data) && 'id' in data) {
+        data = [data];
+      }
+      // If it's already an array, use it as is
+      else if (!Array.isArray(data)) {
+        data = [];
+      }
+      
+      // Transform the data to match the User interface
+      return Array.isArray(data) ? data.map(user => ({
+        id: user.id || user.pk || '',
+        firstName: user.first_name || user.firstName || '',
+        lastName: user.last_name || user.lastName || '',
+        email: user.email || '',
+        phone: user.phone || undefined,
+        roles: Array.isArray(user.roles) ? user.roles : [],
+        isActive: user.is_active !== undefined ? user.is_active : user.isActive !== undefined ? user.isActive : true,
+        emailVerified: user.email_verified || user.emailVerified || false,
+        phoneVerified: user.phone_verified || user.phoneVerified || false,
+        lastLogin: user.last_login || user.lastLogin,
+        createdAt: user.created_at || user.createdAt || new Date().toISOString(),
+      })) : [];
     } catch (error) {
+      console.error('Failed to fetch users:', error);
       throw new Error('Failed to fetch users');
     }
   },

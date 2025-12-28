@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from '@mui/material/styles'
 import { Provider } from 'react-redux'
 import { store } from './store'
@@ -18,16 +18,49 @@ import { UserProfilePage } from './pages/UserProfilePage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { governmentTheme } from './theme/governmentTheme'
 import { NotificationProvider } from './services/NotificationService'
+import LoginPage from './pages/LoginPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ProfilePage from './pages/ProfilePage'
+import DashboardRouter from './pages/DashboardRouter'
+import RoleBasedRoute from './components/RoleBasedRoute'
+import AccessDenied from './components/AccessDenied'
 
 const AppContent: React.FC = () => {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      {/* Public Routes */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/" element={<LandingPage />} />
+      <Route path="/access-denied" element={<AccessDenied />} />
       
-      {/* Protected Routes */}
+      {/* Legacy Login Route */}
+      <Route path="/login-legacy" element={<Login />} />
+      
+      {/* Protected Routes - Dashboard Router (role-based) */}
       <Route
         path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardRouter />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Protected Routes - User Profile */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      
+      {/* Protected Routes - Legacy Dashboard */}
+      <Route
+        path="/dashboard-legacy"
         element={
           <ProtectedRoute>
             <Dashboard />
@@ -98,14 +131,8 @@ const AppContent: React.FC = () => {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <UserProfilePage />
-          </ProtectedRoute>
-        }
-      />
+      {/* Catch-all - Redirect to login */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )
 }

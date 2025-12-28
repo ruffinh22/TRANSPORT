@@ -87,6 +87,8 @@ class User(AbstractUser, BaseModel):
         max_length=20,
         validators=[phone_regex],
         unique=True,
+        null=True,
+        blank=True,
         db_index=True
     )
     first_name = models.CharField(max_length=100)

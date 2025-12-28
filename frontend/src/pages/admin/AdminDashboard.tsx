@@ -40,10 +40,7 @@ import {
   Lock as LockIcon,
   CheckCircle as ApproveIcon,
 } from '@mui/icons-material';
-import { useAppDispatch, useAppSelector } from '../../hooks/redux';
-import { authService } from '../../services/authService';
 import userManagementService from '../../services/userManagementService';
-import { useRoleBasedAccess } from '../../hooks/useRoleBasedAccess';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -87,8 +84,6 @@ interface StatCard {
 }
 
 export const AdminDashboard: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { hasPermission } = useRoleBasedAccess();
   const [tabValue, setTabValue] = useState(0);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);

@@ -61,7 +61,7 @@ export const authService = {
   /**
    * Obtenir le profil utilisateur actuel
    */
-  getProfile: () => apiClient.get('/users/profile/'),
+  getProfile: () => apiClient.get('/users/me/'),
 
   /**
    * Rafraîchir le token d'accès

@@ -19,18 +19,18 @@ import {
   TableRow,
   Paper,
   Alert,
-  TabContext,
-  TabList,
-  TabPanel,
-  Chip,
+  Tab,
+  Divider,
+  Grid,
+  IconButton,
+  InputAdornment,
   CircularProgress,
+  Chip,
 } from '@mui/material'
-import { Tab } from '@mui/material'
-import { useAppSelector } from '../hooks'
+import { TabContext, TabList, TabPanel } from '@mui/lab'
+import { Visibility, VisibilityOff, Edit as EditIcon, Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material'
 import { authService } from '../services'
 import { govStyles } from '../styles/govStyles'
-import { GovPageWrapper, GovPageHeader } from './GovPageComponents'
-import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import SecurityIcon from '@mui/icons-material/Security'
 import LogoutIcon from '@mui/icons-material/Logout'
@@ -39,7 +39,10 @@ import LogoutIcon from '@mui/icons-material/Logout'
  * Page de profil utilisateur et gestion des sessions
  */
 const ProfilePage: React.FC = () => {
-  const { user } = useAppSelector((state) => state.auth)
+  // Récupérer l'utilisateur depuis localStorage
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  
   const [tabValue, setTabValue] = useState('0') // 0=Profil, 1=Mots de passe, 2=Sessions
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -144,8 +147,25 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <GovPageWrapper>
-      <GovPageHeader title="Mon Profil" subtitle="Gestion de votre compte et vos sessions" />
+    <Box>
+      <Box
+        sx={{
+          backgroundColor: '#f5f5f5',
+          py: 3,
+          px: 3,
+          borderBottom: '2px solid #ddd',
+          mb: 2,
+        }}
+      >
+        <Container maxWidth="lg">
+          <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#003D66', mb: 1 }}>
+            Mon Profil
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'textSecondary' }}>
+            Gestion de votre compte et vos sessions
+          </Typography>
+        </Container>
+      </Box>
 
       <Container maxWidth="md" sx={{ my: 4 }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -441,7 +461,7 @@ const ProfilePage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </GovPageWrapper>
+    </Box>
   )
 }
 
