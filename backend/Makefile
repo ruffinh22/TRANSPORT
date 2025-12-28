@@ -18,7 +18,8 @@ help:
 	@echo "  make migrate          - Appliquer les migrations"
 	@echo "  make superuser        - Créer un superuser"
 	@echo "  make init-roles       - Initialiser les rôles"
-	@echo "  make setup            - Setup complet (install + migrate + roles)"
+	@echo "  make seed-users       - Créer les utilisateurs par défaut"
+	@echo "  make setup            - Setup complet (install + migrate + roles + users)"
 	@echo ""
 	@echo "$(GREEN)Développement:$(NC)"
 	@echo "  make run              - Lancer le serveur de développement"
@@ -59,7 +60,7 @@ install:
 	pip install -r requirements-dev.txt
 	@echo "$(GREEN)✓ Installation terminée$(NC)"
 
-setup: install migrate init-roles
+setup: install migrate init-roles seed-users
 	@echo "$(GREEN)✓ Setup complet terminé$(NC)"
 
 # Database
@@ -82,12 +83,18 @@ init-roles:
 	python manage.py init_roles
 	@echo "$(GREEN)✓ Rôles créés$(NC)"
 
+seed-users:
+	@echo "$(BLUE)Création des utilisateurs par défaut...$(NC)"
+	python manage.py seed_users
+	@echo "$(GREEN)✓ Utilisateurs créés$(NC)"
+
 reset-db:
 	@echo "$(YELLOW)⚠️  Réinitialisation de la base de données...$(NC)"
 	@read -p "Êtes-vous sûr? (y/n) " confirm && [ "$$confirm" = "y" ] && \
 	python manage.py flush --noinput && \
 	python manage.py migrate && \
 	python manage.py init_roles && \
+	python manage.py seed_users && \
 	echo "$(GREEN)✓ Base de données réinitialisée$(NC)" || echo "Annulé"
 
 dumpdata:
