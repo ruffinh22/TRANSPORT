@@ -552,7 +552,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stat
 
   return (
     <>
-      {/* PREMIÈRE RANGÉE - Cartes principales ULTRA RESPONSIVE */}
+      {/* PREMIÈRE RANGÉE - Cartes principales ULTRA RESPONSIVE - FILTRÉES */}
       <Box 
         sx={{ 
           display: 'grid', 
@@ -561,27 +561,40 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stat
           mb: { xs: 2, sm: 2.5, md: 4 }
         }}
       >
-        <GovStatCard
-          title="Colis"
-          value={stats.parcels}
-          icon={ParcelsIcon}
-          onClick={() => navigate('/parcels')}
-          color="#007A5E"
-        />
-        <GovStatCard
-          title="Tickets"
-          value={stats.tickets}
-          icon={TicketsIcon}
-          onClick={() => navigate('/tickets')}
-          color="#CE1126"
-        />
-        <GovStatCard
-          title="Paiements"
-          value={stats.payments}
-          icon={TrendingIcon}
-          onClick={() => navigate('/payments')}
-          color="#003D66"
-        />
+        {/* Colis - Visible si permission view */}
+        {hasPermission('view', 'parcels') && (
+          <GovStatCard
+            title="Colis"
+            value={stats.parcels}
+            icon={ParcelsIcon}
+            onClick={() => navigate('/parcels')}
+            color="#007A5E"
+          />
+        )}
+
+        {/* Tickets - Visible si permission view */}
+        {hasPermission('view', 'tickets') && (
+          <GovStatCard
+            title="Tickets"
+            value={stats.tickets}
+            icon={TicketsIcon}
+            onClick={() => navigate('/tickets')}
+            color="#CE1126"
+          />
+        )}
+
+        {/* Paiements - Visible si permission view */}
+        {hasPermission('view', 'payments') && (
+          <GovStatCard
+            title="Paiements"
+            value={stats.payments}
+            icon={TrendingIcon}
+            onClick={() => navigate('/payments')}
+            color="#003D66"
+          />
+        )}
+
+        {/* Notifications - Toujours visible */}
         <GovStatCard
           title="Notif."
           value="2"
@@ -591,7 +604,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stat
         />
       </Box>
 
-      {/* DEUXIÈME RANGÉE - Trajets et Employés ULTRA RESPONSIVE */}
+      {/* DEUXIÈME RANGÉE - Trajets et Employés ULTRA RESPONSIVE - FILTRÉES */}
       <Box 
         sx={{ 
           display: 'grid', 
@@ -600,23 +613,30 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stat
           mb: { xs: 2, sm: 2.5, md: 4 }
         }}
       >
-        <GovStatCard
-          title="Trajets"
-          value={stats.trips}
-          icon={TripsIcon}
-          onClick={() => navigate('/trips')}
-          color="#003D66"
-        />
-        <GovStatCard
-          title="Employés"
-          value={stats.employees}
-          icon={EmployeesIcon}
-          onClick={() => navigate('/employees')}
-          color="#FFD700"
-        />
+        {/* Trajets - Visible si permission view */}
+        {hasPermission('view', 'trips') && (
+          <GovStatCard
+            title="Trajets"
+            value={stats.trips}
+            icon={TripsIcon}
+            onClick={() => navigate('/trips')}
+            color="#003D66"
+          />
+        )}
+
+        {/* Employés - Visible si permission view */}
+        {hasPermission('view', 'employees') && (
+          <GovStatCard
+            title="Employés"
+            value={stats.employees}
+            icon={EmployeesIcon}
+            onClick={() => navigate('/employees')}
+            color="#FFD700"
+          />
+        )}
       </Box>
 
-      {/* TROISIÈME RANGÉE - Revenu et Villes ULTRA RESPONSIVE */}
+      {/* TROISIÈME RANGÉE - Revenu et Villes ULTRA RESPONSIVE - FILTRÉES */}
       <Box 
         sx={{ 
           display: 'grid', 
@@ -625,7 +645,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stat
           mb: { xs: 2, sm: 2.5, md: 4 }
         }}
       >
-        <Card
+        {/* Chiffre d'Affaires - Visible si permission view pour revenue */}
+        {hasPermission('view', 'revenue') && (
+          <Card
             sx={{
               backgroundColor: '#003D66',
               color: '#ffffff',
@@ -693,14 +715,18 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stat
               </Box>
             </CardContent>
           </Card>
+        )}
 
-        <GovStatCard
-          title="Villes"
-          value={stats.cities}
-          icon={CitiesIcon}
-          onClick={() => navigate('/cities')}
-          color="#CE1126"
-        />
+        {/* Villes - Visible si permission view */}
+        {hasPermission('view', 'cities') && (
+          <GovStatCard
+            title="Villes"
+            value={stats.cities}
+            icon={CitiesIcon}
+            onClick={() => navigate('/cities')}
+            color="#CE1126"
+          />
+        )}
       </Box>
 
       {/* ACTIONS RAPIDES - ULTRA RESPONSIVE */}
