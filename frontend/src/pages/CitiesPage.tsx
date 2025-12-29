@@ -22,6 +22,8 @@ import {
   TableRow,
   Paper,
   Grid,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material'
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import { MainLayout } from '../components/MainLayout'
@@ -40,6 +42,10 @@ interface City {
 }
 
 export const CitiesPage: React.FC = () => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+
   const [cities, setCities] = useState<City[]>([])
   const [loading, setLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
@@ -134,7 +140,7 @@ export const CitiesPage: React.FC = () => {
   )
 
   return (
-    <MainLayout>
+    <MainLayout hideGovernmentHeader={true}>
       <GovPageWrapper maxWidth="lg">
         <GovPageHeader
           title="Villes et Couverture"
@@ -152,9 +158,9 @@ export const CitiesPage: React.FC = () => {
 
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-        {/* Filtres */}
-        <Paper sx={{ p: 2, mb: 3, ...govStyles.contentCard }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+        {/* Filtres - ULTRA RESPONSIVE */}
+        <Paper sx={{ p: { xs: 1.5, sm: 2, md: 2 }, mb: { xs: 2, sm: 3, md: 3 }, ...govStyles.contentCard }}>
+          <Stack direction={{ xs: 'column', sm: 'column', md: 'row' }} spacing={{ xs: 1.5, sm: 2, md: 2 }} sx={{ alignItems: { xs: 'stretch', sm: 'stretch', md: 'center' } }}>
             <TextField
               label="Rechercher (ville/région)"
               value={search}
@@ -162,13 +168,19 @@ export const CitiesPage: React.FC = () => {
               variant="outlined"
               size="small"
               fullWidth
-              sx={{ maxWidth: { md: '300px' } }}
+              sx={{ 
+                maxWidth: { xs: '100%', md: '300px' },
+                '& .MuiOutlinedInput-root': {
+                  fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
+                }
+              }}
             />
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" spacing={1} sx={{ width: { xs: '100%', md: 'auto' } }}>
               <Button
                 variant={viewMode === 'table' ? 'contained' : 'outlined'}
                 onClick={() => setViewMode('table')}
                 size="small"
+                fullWidth={isMobile}
                 sx={viewMode === 'table' ? govStyles.govButton.primary : {}}
               >
                 📊 Tableau
@@ -177,6 +189,7 @@ export const CitiesPage: React.FC = () => {
                 variant={viewMode === 'grid' ? 'contained' : 'outlined'}
                 onClick={() => setViewMode('grid')}
                 size="small"
+                fullWidth={isMobile}
                 sx={viewMode === 'grid' ? govStyles.govButton.primary : {}}
               >
                 📋 Cartes
@@ -189,6 +202,7 @@ export const CitiesPage: React.FC = () => {
                 loadCities()
               }}
               sx={govStyles.govButton.secondary}
+              fullWidth={isMobile}
             >
               Réinitialiser
             </Button>
@@ -199,18 +213,138 @@ export const CitiesPage: React.FC = () => {
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
             <CircularProgress sx={{ color: govStyles.colors.success }} />
           </Box>
+        ) : isMobile ? (
+          /* Vue CARTES MOBILE (auto sur mobile) */
+          <Box sx={{ width: '100%', px: { xs: 1, sm: 0 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1, sm: 1.5, md: 2 }, margin: '0 auto', maxWidth: { xs: '90%', sm: '100%' } }}>
+              {filteredCities.length === 0 ? (
+                <Paper sx={{ p: 4, textAlign: 'center', color: '#999' }}>
+                  Aucune ville trouvée
+                </Paper>
+              ) : (
+                filteredCities.map((city) => (
+                    <Card sx={{
+                      borderLeft: `5px solid ${govStyles.colors.success}`,
+                      p: { xs: 1, sm: 1.5, md: 2 },
+                    backgroundColor: '#f9f9f9',
+                    '&:hover': {
+                      boxShadow: '0 4px 8px rgba(0, 122, 94, 0.15)',
+                      backgroundColor: '#fafafa'
+                    }
+                  }}>
+                    <Stack spacing={{ xs: 1, sm: 1.5 }}>
+                      {/* Header */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: { xs: '0.85rem', sm: '0.95rem' }, color: govStyles.colors.success }}>
+                            🌍 {city.name}
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' }, color: '#666' }}>
+                            {city.region}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={city.status === 'active' ? 'Actif' : 'Inactif'}
+                          color={city.status === 'active' ? 'success' : 'default'}
+                          size="small"
+                          sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
+                        />
+                      </Box>
+
+                      {/* Info Grid 2x2 */}
+                      <Box sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: { xs: 1, sm: 1.5 },
+                        backgroundColor: '#fff',
+                        p: { xs: 1, sm: 1.5 },
+                        borderRadius: 1
+                      }}>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, color: '#666' }}>
+                            Population
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem' }, color: '#000', fontWeight: 500 }}>
+                            {(city.population / 1000).toFixed(1)}k
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, color: '#666' }}>
+                            Couverture
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem' }, color: getCoverageColor(city.coverage), fontWeight: 600 }}>
+                            {city.coverage}%
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Progress Bar */}
+                      <Box sx={{
+                        width: '100%',
+                        height: '6px',
+                        backgroundColor: '#e0e0e0',
+                        borderRadius: '3px',
+                        overflow: 'hidden'
+                      }}>
+                        <Box
+                          sx={{
+                            height: '100%',
+                            width: `${city.coverage}%`,
+                            backgroundColor: getCoverageColor(city.coverage),
+                            transition: 'width 0.3s'
+                          }}
+                        />
+                      </Box>
+
+                      {/* Actions */}
+                      <Stack direction="row" spacing={1} sx={{ pt: 1 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleOpenDialog(city)}
+                          fullWidth
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            py: { xs: 0.75, sm: 1 },
+                            color: govStyles.colors.success,
+                            borderColor: govStyles.colors.success,
+                            '&:hover': { backgroundColor: 'rgba(0, 122, 94, 0.05)' }
+                          }}
+                        >
+                          ✏️ Éditer
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => handleDelete(city.id)}
+                          fullWidth
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            py: { xs: 0.75, sm: 1 }
+                          }}
+                        >
+                          🗑️ Supprimer
+                        </Button>
+                      </Stack>
+                    </Stack>
+                    </Card>
+                ))
+              )}
+            </Box>
+          </Box>
         ) : viewMode === 'table' ? (
-          /* Vue Tableau */
+          /* Vue TABLEAU DESKTOP */
           <TableContainer component={Paper} sx={govStyles.contentCard}>
             <Table sx={govStyles.table}>
               <TableHead>
                 <TableRow sx={{ backgroundColor: govStyles.colors.success }}>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Ville</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Région</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="right">Population</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Couverture</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Statut</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Actions</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Ville</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Région</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }} align="right">Population</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }} align="center">Couverture</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Statut</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }} align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -223,49 +357,39 @@ export const CitiesPage: React.FC = () => {
                 ) : (
                   filteredCities.map((city) => (
                     <TableRow key={city.id} sx={{ '&:hover': { backgroundColor: '#f9f9f9' }, borderLeft: `4px solid ${govStyles.colors.success}` }}>
-                      <TableCell sx={{ fontWeight: 600 }}>{city.name}</TableCell>
-                      <TableCell>{city.region}</TableCell>
-                      <TableCell align="right">
+                      <TableCell sx={{ fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>{city.name}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>{city.region}</TableCell>
+                      <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         {city.population.toLocaleString('fr-FR')}
                       </TableCell>
-                      <TableCell align="center">
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 1,
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              width: '100%',
-                              maxWidth: '80px',
-                              height: '8px',
-                              backgroundColor: '#e0e0e0',
-                              borderRadius: '4px',
-                              overflow: 'hidden',
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                height: '100%',
-                                width: `${city.coverage}%`,
-                                backgroundColor: getCoverageColor(city.coverage),
-                                transition: 'width 0.3s',
-                              }}
-                            />
+                      <TableCell align="center" sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                          <Box sx={{
+                            width: '100%',
+                            maxWidth: '80px',
+                            height: '8px',
+                            backgroundColor: '#e0e0e0',
+                            borderRadius: '4px',
+                            overflow: 'hidden',
+                          }}>
+                            <Box sx={{
+                              height: '100%',
+                              width: `${city.coverage}%`,
+                              backgroundColor: getCoverageColor(city.coverage),
+                              transition: 'width 0.3s',
+                            }} />
                           </Box>
-                          <Typography variant="caption" sx={{ fontWeight: 700, minWidth: '35px' }}>
+                          <Typography variant="caption" sx={{ fontWeight: 700, minWidth: '35px', fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.8rem' } }}>
                             {city.coverage}%
                           </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         <Chip
-                          label={city.status === 'active' ? 'Active' : 'Inactive'}
+                          label={city.status === 'active' ? 'Actif' : 'Inactif'}
                           color={city.status === 'active' ? 'success' : 'default'}
                           size="small"
+                          sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.8rem' } }}
                         />
                       </TableCell>
                       <TableCell align="center">
@@ -274,7 +398,7 @@ export const CitiesPage: React.FC = () => {
                             size="small"
                             variant="text"
                             onClick={() => handleOpenDialog(city)}
-                            sx={{ color: govStyles.colors.success }}
+                            sx={{ color: govStyles.colors.success, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' } }}
                           >
                             ✏️
                           </Button>
@@ -282,7 +406,7 @@ export const CitiesPage: React.FC = () => {
                             size="small"
                             variant="text"
                             onClick={() => handleDelete(city.id)}
-                            sx={{ color: govStyles.colors.danger }}
+                            sx={{ color: govStyles.colors.danger, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' } }}
                           >
                             🗑️
                           </Button>
@@ -295,75 +419,67 @@ export const CitiesPage: React.FC = () => {
             </Table>
           </TableContainer>
         ) : (
-          /* Vue Grille */
-          <Grid container spacing={3}>
+          /* Vue GRILLE DESKTOP */
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: { xs: 1.5, sm: 2, md: 3 } }}>
             {filteredCities.length === 0 ? (
-              <Grid item xs={12}>
-                <Typography align="center" sx={{ color: '#999', py: 4 }}>
-                  Aucune ville trouvée
-                </Typography>
-              </Grid>
+              <Typography align="center" sx={{ color: '#999', py: 4, gridColumn: '1 / -1' }}>
+                Aucune ville trouvée
+              </Typography>
             ) : (
               filteredCities.map((city) => (
-                <Grid item xs={12} sm={6} md={4} key={city.id}>
-                  <Card
-                    sx={{
-                      borderLeft: `5px solid ${govStyles.colors.success}`,
-                      borderRadius: 2,
-                      transition: 'all 0.3s',
-                      '&:hover': {
-                        boxShadow: 3,
-                        transform: 'translateY(-2px)',
-                      },
-                      height: '100%',
-                    }}
-                  >
+                  <Card sx={{
+                    borderLeft: `5px solid ${govStyles.colors.success}`,
+                    borderRadius: 2,
+                    transition: 'all 0.3s',
+                    '&:hover': {
+                      boxShadow: 3,
+                      transform: 'translateY(-2px)',
+                    },
+                    height: '100%',
+                  }}>
                     <CardContent>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: govStyles.colors.success }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: govStyles.colors.success, fontSize: { xs: '0.95rem', sm: '1.1rem', md: '1.25rem' } }}>
                           🌍 {city.name}
                         </Typography>
                         <Chip
-                          label={city.status === 'active' ? 'Active' : 'Inactive'}
+                          label={city.status === 'active' ? 'Actif' : 'Inactif'}
                           color={city.status === 'active' ? 'success' : 'default'}
                           size="small"
+                          sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.8rem' } }}
                         />
                       </Box>
 
-                      <Typography variant="body2" sx={{ color: '#666', mb: 2 }}>
+                      <Typography variant="body2" sx={{ color: '#666', mb: 2, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' } }}>
                         <strong>Région:</strong> {city.region}
                       </Typography>
 
-                      <Typography variant="body2" sx={{ color: '#666', mb: 3 }}>
+                      <Typography variant="body2" sx={{ color: '#666', mb: 3, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' } }}>
                         <strong>Population:</strong> {city.population.toLocaleString('fr-FR')}
                       </Typography>
 
                       {/* Barre Couverture */}
                       <Box sx={{ mb: 3 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                          <Typography variant="caption" sx={{ fontWeight: 600, fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.8rem' } }}>
                             Couverture
                           </Typography>
-                          <Typography variant="caption" sx={{ fontWeight: 700, color: getCoverageColor(city.coverage) }}>
+                          <Typography variant="caption" sx={{ fontWeight: 700, color: getCoverageColor(city.coverage), fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.8rem' } }}>
                             {city.coverage}%
                           </Typography>
                         </Box>
-                        <Box
-                          sx={{
-                            width: '100%',
-                            height: '8px',
-                            backgroundColor: '#e0e0e0',
-                            borderRadius: '4px',
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              height: '100%',
-                              width: `${city.coverage}%`,
-                              backgroundColor: getCoverageColor(city.coverage),
-                            }}
-                          />
+                        <Box sx={{
+                          width: '100%',
+                          height: '8px',
+                          backgroundColor: '#e0e0e0',
+                          borderRadius: '4px',
+                          overflow: 'hidden',
+                        }}>
+                          <Box sx={{
+                            height: '100%',
+                            width: `${city.coverage}%`,
+                            backgroundColor: getCoverageColor(city.coverage),
+                          }} />
                         </Box>
                       </Box>
 
@@ -394,10 +510,9 @@ export const CitiesPage: React.FC = () => {
                       </Stack>
                     </CardContent>
                   </Card>
-                </Grid>
-              ))
-            )}
-          </Grid>
+                ))
+              )}
+            </Box>
         )}
 
         {/* Dialog Form */}

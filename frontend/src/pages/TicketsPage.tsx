@@ -22,6 +22,12 @@ import {
   FormControl,
   InputLabel,
   Select,
+  MenuItem,
+  useTheme,
+  useMediaQuery,
+  Card,
+  CardContent,
+  Grid,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -46,6 +52,10 @@ interface Ticket {
 }
 
 export const TicketsPage: React.FC = () => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
@@ -141,7 +151,7 @@ export const TicketsPage: React.FC = () => {
   )
 
   return (
-    <MainLayout>
+    <MainLayout hideGovernmentHeader={true}>
       <GovPageWrapper maxWidth="lg">
         <GovPageHeader
           title="Gestion des Billets"
@@ -159,9 +169,9 @@ export const TicketsPage: React.FC = () => {
 
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-        {/* Filtres */}
-        <Paper sx={{ p: 2, mb: 3, ...govStyles.contentCard }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+        {/* Filtres - ULTRA RESPONSIVE */}
+        <Paper sx={{ p: { xs: 1.5, sm: 2, md: 2 }, mb: { xs: 2, sm: 3, md: 3 }, ...govStyles.contentCard }}>
+          <Stack direction={{ xs: 'column', sm: 'column', md: 'row' }} spacing={{ xs: 1.5, sm: 2, md: 2 }}>
             <TextField
               label="Recherche (nom/email)"
               value={search}
@@ -169,19 +179,26 @@ export const TicketsPage: React.FC = () => {
               variant="outlined"
               size="small"
               fullWidth
-              sx={{ maxWidth: { md: '300px' } }}
+              sx={{ 
+                maxWidth: { xs: '100%', md: '300px' },
+                '& .MuiOutlinedInput-root': {
+                  fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
+                }
+              }}
             />
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>Statut</InputLabel>
+            <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 200 } }}>
+              <InputLabel htmlFor="status-filter-select" sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } }}>Statut</InputLabel>
               <Select
+                id="status-filter-select"
                 label="Statut"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
+                sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } }}
               >
-                <option value="all">Tous</option>
-                <option value="confirmed">Confirmé</option>
-                <option value="cancelled">Annulé</option>
-                <option value="used">Utilisé</option>
+                <MenuItem value="all">Tous</MenuItem>
+                <MenuItem value="confirmed">Confirmé</MenuItem>
+                <MenuItem value="cancelled">Annulé</MenuItem>
+                <MenuItem value="used">Utilisé</MenuItem>
               </Select>
             </FormControl>
             <Button
@@ -192,28 +209,147 @@ export const TicketsPage: React.FC = () => {
                 loadTickets()
               }}
               sx={govStyles.govButton.secondary}
+              fullWidth={isMobile}
             >
               Réinitialiser
             </Button>
           </Stack>
         </Paper>
 
-        {/* Table */}
+        {/* LAYOUT RESPONSIVE - CARDS MOBILE / TABLE DESKTOP */}
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
             <CircularProgress sx={{ color: govStyles.colors.primary }} />
           </Box>
+        ) : isMobile ? (
+          <Box sx={{ width: '100%', px: { xs: 1, sm: 0 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1, sm: 1.5, md: 2 }, margin: '0 auto', maxWidth: { xs: '90%', sm: '100%' } }}>
+              {filteredTickets.length === 0 ? (
+                <Paper sx={{ p: 4, textAlign: 'center', color: '#999' }}>
+                  Aucun billet trouvé
+                </Paper>
+              ) : (
+                filteredTickets.map((ticket) => (
+                  <Card key={ticket.id} sx={{
+                    p: { xs: 1, sm: 1.5, md: 2 },
+                    borderLeft: '4px solid #003D66',
+                    backgroundColor: '#f9f9f9',
+                    '&:hover': {
+                      boxShadow: '0 4px 8px rgba(0, 61, 102, 0.15)',
+                      backgroundColor: '#fafafa'
+                    }
+                  }}>
+                    <Stack spacing={{ xs: 1, sm: 1.5 }}>
+                      {/* Header */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: { xs: '0.85rem', sm: '0.95rem' }, color: govStyles.colors.primary }}>
+                            {ticket.passenger_name}
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' }, color: '#666' }}>
+                            Siège {ticket.seat_number}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={
+                            ticket.status === 'confirmed'
+                              ? 'Confirmé'
+                              : ticket.status === 'cancelled'
+                                ? 'Annulé'
+                                : ticket.status === 'used'
+                                  ? 'Utilisé'
+                                  : 'En attente'
+                          }
+                          color={
+                            ticket.status === 'confirmed'
+                              ? 'success'
+                              : ticket.status === 'cancelled'
+                                ? 'error'
+                                : ticket.status === 'used'
+                                  ? 'warning'
+                                  : 'default'
+                          }
+                          size="small"
+                          sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
+                        />
+                      </Box>
+
+                      {/* Info Grid 2x2 */}
+                      <Box sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: { xs: 1, sm: 1.5 },
+                        backgroundColor: '#fff',
+                        p: { xs: 1, sm: 1.5 },
+                        borderRadius: 1
+                      }}>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, color: '#666' }}>
+                            Email
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' }, color: '#000', wordBreak: 'break-word' }}>
+                            {ticket.passenger_email}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, color: '#666' }}>
+                            Prix
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.85rem' }, color: '#000', fontWeight: 500 }}>
+                            {ticket.price.toLocaleString('fr-FR')} CFA
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Actions */}
+                      <Stack direction="row" spacing={1} sx={{ pt: 1 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleOpenDialog(ticket)}
+                          fullWidth
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            py: { xs: 0.75, sm: 1 },
+                            color: govStyles.colors.primary,
+                            borderColor: govStyles.colors.primary,
+                            '&:hover': { backgroundColor: 'rgba(0, 61, 102, 0.05)' }
+                          }}
+                        >
+                          ✏️ Éditer
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => handleDelete(ticket.id)}
+                          fullWidth
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            py: { xs: 0.75, sm: 1 }
+                          }}
+                        >
+                          🗑️ Supprimer
+                        </Button>
+                      </Stack>
+                    </Stack>
+                    </Card>
+                ))  
+              )}
+            </Box>
+          </Box>
         ) : (
+          // TABLE DESKTOP RESPONSIVE
           <TableContainer component={Paper} sx={govStyles.contentCard}>
             <Table sx={govStyles.table}>
               <TableHead>
                 <TableRow sx={{ backgroundColor: govStyles.colors.primary }}>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Passager</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Email</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Siège</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="right">Prix</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Statut</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Actions</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Passager</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Email</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Siège</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }} align="right">Prix</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Statut</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }} align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -226,11 +362,11 @@ export const TicketsPage: React.FC = () => {
                 ) : (
                   filteredTickets.map((ticket) => (
                     <TableRow key={ticket.id} sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}>
-                      <TableCell>{ticket.passenger_name}</TableCell>
-                      <TableCell>{ticket.passenger_email}</TableCell>
-                      <TableCell>{ticket.seat_number}</TableCell>
-                      <TableCell align="right">{ticket.price.toLocaleString('fr-FR')} CFA</TableCell>
-                      <TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>{ticket.passenger_name}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>{ticket.passenger_email}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>{ticket.seat_number}</TableCell>
+                      <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>{ticket.price.toLocaleString('fr-FR')} CFA</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         <Chip
                           label={
                             ticket.status === 'confirmed'
@@ -251,6 +387,7 @@ export const TicketsPage: React.FC = () => {
                                   : 'default'
                           }
                           size="small"
+                          sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.8rem' } }}
                         />
                       </TableCell>
                       <TableCell align="center">
@@ -259,7 +396,7 @@ export const TicketsPage: React.FC = () => {
                             size="small"
                             variant="text"
                             onClick={() => handleOpenDialog(ticket)}
-                            sx={{ color: govStyles.colors.primary }}
+                            sx={{ color: govStyles.colors.primary, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' } }}
                           >
                             ✏️
                           </Button>
@@ -267,7 +404,7 @@ export const TicketsPage: React.FC = () => {
                             size="small"
                             variant="text"
                             onClick={() => handleDelete(ticket.id)}
-                            sx={{ color: govStyles.colors.danger }}
+                            sx={{ color: govStyles.colors.danger, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' } }}
                           >
                             🗑️
                           </Button>

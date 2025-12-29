@@ -15,6 +15,7 @@ import {
   FormControl,
   InputLabel,
   Select,
+  MenuItem,
   Container,
   Alert,
   CircularProgress,
@@ -25,6 +26,9 @@ import {
   TableHead,
   TableRow,
   Paper,
+  useTheme,
+  useMediaQuery,
+  Grid,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -53,6 +57,10 @@ interface Trip {
 }
 
 export const TripsPage: React.FC = () => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+
   const [trips, setTrips] = useState<Trip[]>([])
   const [loading, setLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
@@ -154,7 +162,7 @@ export const TripsPage: React.FC = () => {
   )
 
   return (
-    <MainLayout>
+    <MainLayout hideGovernmentHeader={true}>
       <GovPageWrapper maxWidth="lg">
         <GovPageHeader
           title="Gestion des Trajets"
@@ -172,9 +180,9 @@ export const TripsPage: React.FC = () => {
 
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-        {/* Filtres */}
-        <Paper sx={{ p: 2, mb: 3, ...govStyles.contentCard }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+        {/* Filtres - ULTRA RESPONSIVE */}
+        <Paper sx={{ p: { xs: 1.5, sm: 2, md: 2 }, mb: { xs: 2, sm: 3, md: 3 }, ...govStyles.contentCard }}>
+          <Stack direction={{ xs: 'column', sm: 'column', md: 'row' }} spacing={{ xs: 1.5, sm: 2, md: 2 }}>
             <TextField
               label="Rechercher (ville)"
               value={search}
@@ -182,19 +190,26 @@ export const TripsPage: React.FC = () => {
               variant="outlined"
               size="small"
               fullWidth
-              sx={{ maxWidth: { md: '300px' } }}
+              sx={{ 
+                maxWidth: { xs: '100%', md: '300px' },
+                '& .MuiOutlinedInput-root': {
+                  fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
+                }
+              }}
             />
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>Statut</InputLabel>
+            <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 200 } }}>
+              <InputLabel htmlFor="status-filter-select" sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } }}>Statut</InputLabel>
               <Select
+                id="status-filter-select"
                 label="Statut"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
+                sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } }}
               >
-                <option value="all">Tous</option>
-                <option value="scheduled">Planifié</option>
-                <option value="ongoing">En cours</option>
-                <option value="completed">Terminé</option>
+                <MenuItem value="all">Tous</MenuItem>
+                <MenuItem value="scheduled">Planifié</MenuItem>
+                <MenuItem value="ongoing">En cours</MenuItem>
+                <MenuItem value="completed">Terminé</MenuItem>
               </Select>
             </FormControl>
             <Button
@@ -205,50 +220,165 @@ export const TripsPage: React.FC = () => {
                 loadTrips()
               }}
               sx={govStyles.govButton.secondary}
+              fullWidth={isMobile}
             >
               Réinitialiser
             </Button>
           </Stack>
         </Paper>
 
-        {/* Table */}
+        {/* Table - ULTRA RESPONSIVE */}
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: { xs: '300px', md: '400px' } }}>
             <CircularProgress sx={{ color: govStyles.colors.primary }} />
           </Box>
+        ) : isMobile ? (
+          // MOBILE VIEW - Cartes responsives
+          <Box sx={{ mb: 3 }}>
+            {filteredTrips.length === 0 ? (
+              <Card sx={{ ...govStyles.contentCard, p: { xs: 2, sm: 3 }, textAlign: 'center' }}>
+                <Typography sx={{ color: '#999', fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1rem' } }}>
+                  Aucun trajet trouvé
+                </Typography>
+              </Card>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1.5, sm: 2 } }}>
+                {filteredTrips.map((trip) => (
+                  <Card key={trip.id} sx={{ 
+                    ...govStyles.contentCard, 
+                    p: { xs: 1.5, sm: 2 },
+                    border: `2px solid ${govStyles.colors.primary}`,
+                    borderRadius: '8px',
+                  }}>
+                      <CardContent sx={{ p: 0 }}>
+                        <Stack spacing={{ xs: 1, sm: 1.5 }}>
+                          {/* Header */}
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography sx={{ fontWeight: 700, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' }, color: govStyles.colors.primary }}>
+                                {trip.departure_city} → {trip.arrival_city}
+                              </Typography>
+                              <Typography sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' }, color: '#666', mt: 0.5 }}>
+                                {new Date(trip.departure_date).toLocaleDateString('fr-FR')}
+                              </Typography>
+                            </Box>
+                            <Chip
+                              label={trip.status === 'scheduled' ? 'Planifié' : trip.status === 'ongoing' ? 'En cours' : 'Terminé'}
+                              color={trip.status === 'scheduled' ? 'primary' : trip.status === 'ongoing' ? 'warning' : 'success'}
+                              size="small"
+                              sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
+                            />
+                          </Box>
+
+                          {/* Info Row 1 */}
+                          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                            <Box>
+                              <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' }, color: '#999', fontWeight: 600, textTransform: 'uppercase' }}>Sièges</Typography>
+                              <Typography sx={{ fontSize: { xs: '0.85rem', sm: '0.95rem' }, fontWeight: 700 }}>{trip.total_seats}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' }, color: '#999', fontWeight: 600, textTransform: 'uppercase' }}>Disponibles</Typography>
+                              <Chip
+                                label={trip.available_seats}
+                                color={trip.available_seats === 0 ? 'error' : trip.available_seats < 5 ? 'warning' : 'success'}
+                                size="small"
+                                sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
+                              />
+                            </Box>
+                          </Box>
+
+                          {/* Info Row 2 */}
+                          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+                            <Box>
+                              <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' }, color: '#999', fontWeight: 600, textTransform: 'uppercase' }}>Prix/Siège</Typography>
+                              <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.9rem' }, fontWeight: 700, color: govStyles.colors.primary }}>
+                                {trip.price_per_seat.toLocaleString('fr-FR')} FCFA
+                              </Typography>
+                            </Box>
+                            <Box>
+                              <Typography sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' }, color: '#999', fontWeight: 600, textTransform: 'uppercase' }}>Arrivée</Typography>
+                              <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem' } }}>
+                                {new Date(trip.arrival_date).toLocaleDateString('fr-FR')}
+                              </Typography>
+                            </Box>
+                          </Box>
+
+                          {/* Actions */}
+                          <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => handleOpenDialog(trip)}
+                              fullWidth
+                              sx={{ 
+                                color: govStyles.colors.primary,
+                                borderColor: govStyles.colors.primary,
+                                fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                                py: { xs: 0.75, sm: 1 },
+                              }}
+                            >
+                              ✏️ Éditer
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => handleDelete(trip.id)}
+                              fullWidth
+                              sx={{ 
+                                color: govStyles.colors.danger,
+                                borderColor: govStyles.colors.danger,
+                                fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                                py: { xs: 0.75, sm: 1 },
+                              }}
+                            >
+                              🗑️ Suppr.
+                            </Button>
+                          </Stack>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                ))}
+              </Box>
+            )}
+          </Box>
         ) : (
-          <TableContainer component={Paper} sx={govStyles.contentCard}>
-            <Table sx={govStyles.table}>
+          // DESKTOP VIEW - Table
+          <TableContainer component={Paper} sx={{ ...govStyles.contentCard, overflowX: 'auto' }}>
+            <Table sx={{ 
+              ...govStyles.table,
+              fontSize: { xs: '0.75rem', sm: '0.85rem', md: '1rem' },
+            }}>
               <TableHead>
                 <TableRow sx={{ backgroundColor: govStyles.colors.primary }}>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Départ</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Arrivée</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Date Départ</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Sièges</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Dispo</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Statut</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Actions</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.9rem' } }}>Départ</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.9rem' } }}>Arrivée</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.9rem' } }}>Date Départ</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.9rem' } }} align="center">Sièges</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.9rem' } }} align="center">Dispo</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.9rem' } }}>Statut</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.9rem' } }} align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filteredTrips.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center" sx={{ py: 4, color: '#999' }}>
+                    <TableCell colSpan={7} align="center" sx={{ py: { xs: 2, md: 4 }, color: '#999', fontSize: { xs: '0.8rem', sm: '0.9rem' } }}>
                       Aucun trajet trouvé
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredTrips.map((trip) => (
                     <TableRow key={trip.id} sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}>
-                      <TableCell>{trip.departure_city}</TableCell>
-                      <TableCell>{trip.arrival_city}</TableCell>
-                      <TableCell>{new Date(trip.departure_date).toLocaleDateString('fr-FR')}</TableCell>
-                      <TableCell align="center">{trip.total_seats}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' } }}>{trip.departure_city}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' } }}>{trip.arrival_city}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' } }}>{new Date(trip.departure_date).toLocaleDateString('fr-FR')}</TableCell>
+                      <TableCell align="center" sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' } }}>{trip.total_seats}</TableCell>
                       <TableCell align="center">
                         <Chip
                           label={trip.available_seats}
                           color={trip.available_seats === 0 ? 'error' : trip.available_seats < 5 ? 'warning' : 'success'}
                           size="small"
+                          sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
                         />
                       </TableCell>
                       <TableCell>
@@ -256,6 +386,7 @@ export const TripsPage: React.FC = () => {
                           label={trip.status === 'scheduled' ? 'Planifié' : trip.status === 'ongoing' ? 'En cours' : 'Terminé'}
                           color={trip.status === 'scheduled' ? 'primary' : trip.status === 'ongoing' ? 'warning' : 'success'}
                           size="small"
+                          sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
                         />
                       </TableCell>
                       <TableCell align="center">
@@ -264,7 +395,7 @@ export const TripsPage: React.FC = () => {
                             size="small"
                             variant="text"
                             onClick={() => handleOpenDialog(trip)}
-                            sx={{ color: govStyles.colors.primary }}
+                            sx={{ color: govStyles.colors.primary, fontSize: { xs: '0.9rem', sm: '1rem' } }}
                           >
                             ✏️
                           </Button>
@@ -272,7 +403,7 @@ export const TripsPage: React.FC = () => {
                             size="small"
                             variant="text"
                             onClick={() => handleDelete(trip.id)}
-                            sx={{ color: govStyles.colors.danger }}
+                            sx={{ color: govStyles.colors.danger, fontSize: { xs: '0.9rem', sm: '1rem' } }}
                           >
                             🗑️
                           </Button>
@@ -286,19 +417,37 @@ export const TripsPage: React.FC = () => {
           </TableContainer>
         )}
 
-        {/* Dialog Form */}
-        <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
-          <DialogTitle sx={{ backgroundColor: govStyles.colors.primary, color: 'white', fontWeight: 700 }}>
+        {/* Dialog Form - ULTRA RESPONSIVE */}
+        <Dialog 
+          open={openDialog} 
+          onClose={() => setOpenDialog(false)} 
+          maxWidth="sm" 
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: { xs: '8px', md: '12px' },
+            }
+          }}
+        >
+          <DialogTitle sx={{ 
+            backgroundColor: govStyles.colors.primary, 
+            color: 'white', 
+            fontWeight: 700,
+            fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' },
+            p: { xs: 1.5, sm: 2 },
+          }}>
             {editingId ? '✏️ Éditer le trajet' : '➕ Nouveau trajet'}
           </DialogTitle>
-          <DialogContent sx={{ pt: 3 }}>
-            <Stack spacing={2}>
+          <DialogContent sx={{ pt: { xs: 1.5, sm: 2, md: 3 }, p: { xs: 1.5, sm: 2, md: 2.5 } }}>
+            <Stack spacing={{ xs: 1.5, sm: 2 }}>
               <TextField
                 label="Ville de départ"
                 fullWidth
                 value={formData.departure_city}
                 onChange={(e) => setFormData({ ...formData, departure_city: e.target.value })}
                 variant="outlined"
+                size="small"
+                sx={{ '& .MuiOutlinedInput-root': { fontSize: { xs: '0.85rem', sm: '0.95rem' } } }}
               />
               <TextField
                 label="Ville d'arrivée"
@@ -306,6 +455,8 @@ export const TripsPage: React.FC = () => {
                 value={formData.arrival_city}
                 onChange={(e) => setFormData({ ...formData, arrival_city: e.target.value })}
                 variant="outlined"
+                size="small"
+                sx={{ '& .MuiOutlinedInput-root': { fontSize: { xs: '0.85rem', sm: '0.95rem' } } }}
               />
               <TextField
                 label="Date de départ"
@@ -314,6 +465,8 @@ export const TripsPage: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 value={formData.departure_date}
                 onChange={(e) => setFormData({ ...formData, departure_date: e.target.value })}
+                size="small"
+                sx={{ '& .MuiOutlinedInput-root': { fontSize: { xs: '0.85rem', sm: '0.95rem' } } }}
               />
               <TextField
                 label="Date d'arrivée"
@@ -322,6 +475,8 @@ export const TripsPage: React.FC = () => {
                 InputLabelProps={{ shrink: true }}
                 value={formData.arrival_date}
                 onChange={(e) => setFormData({ ...formData, arrival_date: e.target.value })}
+                size="small"
+                sx={{ '& .MuiOutlinedInput-root': { fontSize: { xs: '0.85rem', sm: '0.95rem' } } }}
               />
               <TextField
                 label="Nombre de sièges"
@@ -329,6 +484,8 @@ export const TripsPage: React.FC = () => {
                 fullWidth
                 value={formData.total_seats}
                 onChange={(e) => setFormData({ ...formData, total_seats: parseInt(e.target.value) })}
+                size="small"
+                sx={{ '& .MuiOutlinedInput-root': { fontSize: { xs: '0.85rem', sm: '0.95rem' } } }}
               />
               <TextField
                 label="Prix par siège (FCFA)"
@@ -336,14 +493,31 @@ export const TripsPage: React.FC = () => {
                 fullWidth
                 value={formData.price_per_seat}
                 onChange={(e) => setFormData({ ...formData, price_per_seat: parseInt(e.target.value) })}
+                size="small"
+                sx={{ '& .MuiOutlinedInput-root': { fontSize: { xs: '0.85rem', sm: '0.95rem' } } }}
               />
             </Stack>
           </DialogContent>
-          <DialogActions sx={{ p: 2, gap: 1 }}>
-            <Button onClick={() => setOpenDialog(false)} sx={govStyles.govButton.secondary}>
+          <DialogActions sx={{ p: { xs: 1.5, sm: 2 }, gap: { xs: 1, sm: 1.5 } }}>
+            <Button 
+              onClick={() => setOpenDialog(false)} 
+              sx={{ 
+                ...govStyles.govButton.secondary,
+                fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' },
+                py: { xs: 0.75, sm: 1 },
+              }}
+            >
               Annuler
             </Button>
-            <Button variant="contained" onClick={handleSave} sx={govStyles.govButton.primary}>
+            <Button 
+              variant="contained" 
+              onClick={handleSave} 
+              sx={{ 
+                ...govStyles.govButton.primary,
+                fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' },
+                py: { xs: 0.75, sm: 1 },
+              }}
+            >
               Sauvegarder
             </Button>
           </DialogActions>

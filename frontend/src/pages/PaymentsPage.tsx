@@ -24,6 +24,10 @@ import {
   FormControl,
   InputLabel,
   Select,
+  MenuItem,
+  useTheme,
+  useMediaQuery,
+  Grid,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -46,6 +50,10 @@ interface Payment {
 }
 
 export const PaymentsPage: React.FC = () => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
@@ -161,7 +169,7 @@ export const PaymentsPage: React.FC = () => {
   )
 
   return (
-    <MainLayout>
+    <MainLayout hideGovernmentHeader={true}>
       <GovPageWrapper maxWidth="lg">
         <GovPageHeader
           title="Gestion des Paiements"
@@ -179,9 +187,9 @@ export const PaymentsPage: React.FC = () => {
 
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-        {/* Filtres */}
-        <Paper sx={{ p: 2, mb: 3, ...govStyles.contentCard }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+        {/* Filtres - ULTRA RESPONSIVE */}
+        <Paper sx={{ p: { xs: 1.5, sm: 2, md: 2 }, mb: { xs: 2, sm: 3, md: 3 }, ...govStyles.contentCard }}>
+          <Stack direction={{ xs: 'column', sm: 'column', md: 'row' }} spacing={{ xs: 1.5, sm: 2, md: 2 }}>
             <TextField
               label="Rechercher (référence)"
               value={search}
@@ -189,19 +197,26 @@ export const PaymentsPage: React.FC = () => {
               variant="outlined"
               size="small"
               fullWidth
-              sx={{ maxWidth: { md: '300px' } }}
+              sx={{ 
+                maxWidth: { xs: '100%', md: '300px' },
+                '& .MuiOutlinedInput-root': {
+                  fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
+                }
+              }}
             />
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>Statut</InputLabel>
+            <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 200 } }}>
+              <InputLabel htmlFor="status-filter-select" sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } }}>Statut</InputLabel>
               <Select
+                id="status-filter-select"
                 label="Statut"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
+                sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } }}
               >
-                <option value="all">Tous</option>
-                <option value="completed">Complété</option>
-                <option value="pending">En attente</option>
-                <option value="failed">Échoué</option>
+                <MenuItem value="all">Tous</MenuItem>
+                <MenuItem value="completed">Complété</MenuItem>
+                <MenuItem value="pending">En attente</MenuItem>
+                <MenuItem value="failed">Échoué</MenuItem>
               </Select>
             </FormControl>
             <Button
@@ -212,28 +227,136 @@ export const PaymentsPage: React.FC = () => {
                 loadPayments()
               }}
               sx={govStyles.govButton.secondary}
+              fullWidth={isMobile}
             >
               Réinitialiser
             </Button>
           </Stack>
         </Paper>
 
-        {/* Table */}
+        {/* LAYOUT RESPONSIVE - CARDS MOBILE / TABLE DESKTOP */}
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
             <CircularProgress sx={{ color: govStyles.colors.primary }} />
           </Box>
+        ) : isMobile ? (
+          <Box sx={{ width: '100%', px: { xs: 1, sm: 0 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1, sm: 1.5, md: 2 }, margin: '0 auto', maxWidth: { xs: '90%', sm: '100%' } }}>
+              {filteredPayments.length === 0 ? (
+                <Paper sx={{ p: 4, textAlign: 'center', color: '#999' }}>
+                  Aucun paiement trouvé
+                </Paper>
+              ) : (
+                filteredPayments.map((payment) => (
+                  <Card key={payment.id} sx={{
+                    p: { xs: 1, sm: 1.5, md: 2 },
+                    borderLeft: '4px solid #003D66',
+                    backgroundColor: '#f9f9f9',
+                    '&:hover': {
+                      boxShadow: '0 4px 8px rgba(0, 61, 102, 0.15)',
+                      backgroundColor: '#fafafa'
+                    }
+                  }}>
+                    <Stack spacing={{ xs: 1, sm: 1.5 }}>
+                      {/* Header */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: { xs: '0.85rem', sm: '0.95rem' }, color: govStyles.colors.primary }}>
+                            💳 {payment.reference}
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' }, color: '#666' }}>
+                            {new Date(payment.created_at).toLocaleDateString('fr-FR')}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={getStatusLabel(payment.status)}
+                          sx={{
+                            backgroundColor: `${getStatusColor(payment.status)}20`,
+                            color: getStatusColor(payment.status),
+                            fontWeight: 700,
+                            fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                            height: 'auto',
+                            padding: '2px 8px'
+                          }}
+                        />
+                      </Box>
+
+                      {/* Info Grid 2x2 */}
+                      <Box sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: { xs: 1, sm: 1.5 },
+                        backgroundColor: '#fff',
+                        p: { xs: 1, sm: 1.5 },
+                        borderRadius: 1
+                      }}>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, color: '#666' }}>
+                            Montant
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.85rem' }, color: govStyles.colors.primary, fontWeight: 600 }}>
+                            {payment.amount.toLocaleString('fr-FR')} CFA
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, color: '#666' }}>
+                            Méthode
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.85rem' }, color: '#000' }}>
+                            {payment.method === 'cash' ? 'Espèces' : payment.method === 'card' ? 'Carte' : 'Virement'}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Actions */}
+                      <Stack direction="row" spacing={1} sx={{ pt: 1 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleOpenDialog(payment)}
+                          fullWidth
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            py: { xs: 0.75, sm: 1 },
+                            color: govStyles.colors.primary,
+                            borderColor: govStyles.colors.primary,
+                            '&:hover': { backgroundColor: 'rgba(0, 61, 102, 0.05)' }
+                          }}
+                        >
+                          ✏️ Éditer
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => handleDelete(payment.id)}
+                          fullWidth
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            py: { xs: 0.75, sm: 1 }
+                          }}
+                        >
+                          🗑️ Supprimer
+                        </Button>
+                      </Stack>
+                    </Stack>
+                    </Card>
+                ))
+              )}
+            </Box>
+          </Box>
         ) : (
+          // TABLE DESKTOP RESPONSIVE
           <TableContainer component={Paper} sx={govStyles.contentCard}>
             <Table sx={govStyles.table}>
               <TableHead>
                 <TableRow sx={{ backgroundColor: govStyles.colors.primary }}>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Référence</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="right">Montant</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Méthode</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Date</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Statut</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Actions</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Référence</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }} align="right">Montant</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Méthode</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Date</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Statut</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }} align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -246,27 +369,29 @@ export const PaymentsPage: React.FC = () => {
                 ) : (
                   filteredPayments.map((payment) => (
                     <TableRow key={payment.id} sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}>
-                      <TableCell sx={{ fontWeight: 500 }}>{payment.reference}</TableCell>
-                      <TableCell align="right">
+                      <TableCell sx={{ fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>{payment.reference}</TableCell>
+                      <TableCell align="right" sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         <Typography sx={{ fontWeight: 600, color: govStyles.colors.primary }}>
                           {payment.amount.toLocaleString('fr-FR')} CFA
                         </Typography>
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         <Chip
                           label={payment.method === 'cash' ? 'Espèces' : payment.method === 'card' ? 'Carte' : 'Virement'}
                           size="small"
                           variant="outlined"
+                          sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.8rem' } }}
                         />
                       </TableCell>
-                      <TableCell>{new Date(payment.created_at).toLocaleDateString('fr-FR')}</TableCell>
-                      <TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>{new Date(payment.created_at).toLocaleDateString('fr-FR')}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         <Chip
                           label={getStatusLabel(payment.status)}
                           sx={{
                             backgroundColor: `${getStatusColor(payment.status)}20`,
                             color: getStatusColor(payment.status),
                             fontWeight: 600,
+                            fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.8rem' }
                           }}
                           size="small"
                         />
@@ -277,7 +402,7 @@ export const PaymentsPage: React.FC = () => {
                             size="small"
                             variant="text"
                             onClick={() => handleOpenDialog(payment)}
-                            sx={{ color: govStyles.colors.primary }}
+                            sx={{ color: govStyles.colors.primary, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' } }}
                           >
                             ✏️
                           </Button>
@@ -285,7 +410,7 @@ export const PaymentsPage: React.FC = () => {
                             size="small"
                             variant="text"
                             onClick={() => handleDelete(payment.id)}
-                            sx={{ color: govStyles.colors.danger }}
+                            sx={{ color: govStyles.colors.danger, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' } }}
                           >
                             🗑️
                           </Button>

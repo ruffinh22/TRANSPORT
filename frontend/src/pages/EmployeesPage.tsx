@@ -25,6 +25,9 @@ import {
   FormControl,
   InputLabel,
   Select,
+  MenuItem,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -50,6 +53,10 @@ interface Employee {
 }
 
 export const EmployeesPage: React.FC = () => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
@@ -183,7 +190,7 @@ export const EmployeesPage: React.FC = () => {
   )
 
   return (
-    <MainLayout>
+    <MainLayout hideGovernmentHeader={true}>
       <GovPageWrapper maxWidth="lg">
         <GovPageHeader
           title="Gestion Ressources Humaines"
@@ -201,9 +208,9 @@ export const EmployeesPage: React.FC = () => {
 
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-        {/* Filtres */}
-        <Paper sx={{ p: 2, mb: 3, ...govStyles.contentCard }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+        {/* Filtres - ULTRA RESPONSIVE */}
+        <Paper sx={{ p: { xs: 1.5, sm: 2, md: 2 }, mb: { xs: 2, sm: 3, md: 3 }, ...govStyles.contentCard }}>
+          <Stack direction={{ xs: 'column', sm: 'column', md: 'row' }} spacing={{ xs: 1.5, sm: 2, md: 2 }}>
             <TextField
               label="Rechercher (nom/email)"
               value={search}
@@ -211,18 +218,25 @@ export const EmployeesPage: React.FC = () => {
               variant="outlined"
               size="small"
               fullWidth
-              sx={{ maxWidth: { md: '300px' } }}
+              sx={{ 
+                maxWidth: { xs: '100%', md: '300px' },
+                '& .MuiOutlinedInput-root': {
+                  fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
+                }
+              }}
             />
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>Statut</InputLabel>
+            <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 200 } }}>
+              <InputLabel htmlFor="status-filter-select" sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } }}>Statut</InputLabel>
               <Select
+                id="status-filter-select"
                 label="Statut"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
+                sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } }}
               >
-                <option value="all">Tous</option>
-                <option value="active">Actif</option>
-                <option value="inactive">Inactif</option>
+                <MenuItem value="all">Tous</MenuItem>
+                <MenuItem value="active">Actif</MenuItem>
+                <MenuItem value="inactive">Inactif</MenuItem>
               </Select>
             </FormControl>
             <Button
@@ -233,28 +247,135 @@ export const EmployeesPage: React.FC = () => {
                 loadEmployees()
               }}
               sx={govStyles.govButton.secondary}
+              fullWidth={isMobile}
             >
               Réinitialiser
             </Button>
           </Stack>
         </Paper>
 
-        {/* Table */}
+        {/* LAYOUT RESPONSIVE - CARDS MOBILE / TABLE DESKTOP */}
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
             <CircularProgress sx={{ color: govStyles.colors.primary }} />
           </Box>
+        ) : isMobile ? (
+          <Box sx={{ width: '100%', px: { xs: 1, sm: 0 } }}>
+            <Grid container spacing={{ xs: 1, sm: 1.5, md: 2 }} sx={{ margin: '0 auto', maxWidth: { xs: '90%', sm: '100%' } }}>
+              {filteredEmployees.length === 0 ? (
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 4, textAlign: 'center', color: '#999' }}>
+                    Aucun employé trouvé
+                  </Paper>
+                </Grid>
+              ) : (
+                filteredEmployees.map((emp) => (
+                  <Grid item xs={12} key={emp.id}>
+                    <Card sx={{
+                      p: { xs: 1, sm: 1.5, md: 2 },
+                    borderLeft: `4px solid ${getRoleColor(emp.role)}`,
+                    backgroundColor: '#f9f9f9',
+                    '&:hover': {
+                      boxShadow: '0 4px 8px rgba(0, 61, 102, 0.15)',
+                      backgroundColor: '#fafafa'
+                    }
+                  }}>
+                    <Stack spacing={{ xs: 1, sm: 1.5 }}>
+                      {/* Header */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: { xs: '0.85rem', sm: '0.95rem' }, color: govStyles.colors.primary }}>
+                            👤 {emp.first_name} {emp.last_name}
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' }, color: '#666' }}>
+                            {emp.email}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={emp.status === 'active' ? 'Actif' : 'Inactif'}
+                          color={emp.status === 'active' ? 'success' : 'default'}
+                          size="small"
+                          sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
+                        />
+                      </Box>
+
+                      {/* Info Grid 2x2 */}
+                      <Box sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: { xs: 1, sm: 1.5 },
+                        backgroundColor: '#fff',
+                        p: { xs: 1, sm: 1.5 },
+                        borderRadius: 1
+                      }}>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, color: '#666' }}>
+                            Rôle
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem' }, color: '#000' }}>
+                            {getRoleLabel(emp.role)}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, color: '#666' }}>
+                            Téléphone
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem' }, color: '#000' }}>
+                            {emp.phone}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Actions */}
+                      <Stack direction="row" spacing={1} sx={{ pt: 1 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleOpenDialog(emp)}
+                          fullWidth
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            py: { xs: 0.75, sm: 1 },
+                            color: govStyles.colors.primary,
+                            borderColor: govStyles.colors.primary,
+                            '&:hover': { backgroundColor: 'rgba(0, 61, 102, 0.05)' }
+                          }}
+                        >
+                          ✏️ Éditer
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => handleDelete(emp.id)}
+                          fullWidth
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            py: { xs: 0.75, sm: 1 }
+                          }}
+                        >
+                          🗑️ Supprimer
+                        </Button>
+                      </Stack>
+                    </Stack>
+                  </Card>
+                </Grid>
+              ))
+            )}
+          </Grid>
+          </Box>
         ) : (
+          // TABLE DESKTOP RESPONSIVE
           <TableContainer component={Paper} sx={govStyles.contentCard}>
             <Table sx={govStyles.table}>
               <TableHead>
                 <TableRow sx={{ backgroundColor: govStyles.colors.primary }}>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Nom</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Email</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Téléphone</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Rôle</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Statut</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Actions</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Nom</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Email</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Téléphone</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Rôle</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Statut</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }} align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -267,27 +388,29 @@ export const EmployeesPage: React.FC = () => {
                 ) : (
                   filteredEmployees.map((emp) => (
                     <TableRow key={emp.id} sx={{ '&:hover': { backgroundColor: '#f9f9f9' } }}>
-                      <TableCell sx={{ fontWeight: 500 }}>
+                      <TableCell sx={{ fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         {emp.first_name} {emp.last_name}
                       </TableCell>
-                      <TableCell>{emp.email}</TableCell>
-                      <TableCell>{emp.phone}</TableCell>
-                      <TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>{emp.email}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>{emp.phone}</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         <Chip
                           label={getRoleLabel(emp.role)}
                           sx={{
                             backgroundColor: `${getRoleColor(emp.role)}20`,
                             color: getRoleColor(emp.role),
                             fontWeight: 600,
+                            fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.8rem' }
                           }}
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         <Chip
                           label={emp.status === 'active' ? 'Actif' : 'Inactif'}
                           color={emp.status === 'active' ? 'success' : 'default'}
                           size="small"
+                          sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.8rem' } }}
                         />
                       </TableCell>
                       <TableCell align="center">
@@ -296,7 +419,7 @@ export const EmployeesPage: React.FC = () => {
                             size="small"
                             variant="text"
                             onClick={() => handleOpenDialog(emp)}
-                            sx={{ color: govStyles.colors.primary }}
+                            sx={{ color: govStyles.colors.primary, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' } }}
                           >
                             ✏️
                           </Button>
@@ -304,7 +427,7 @@ export const EmployeesPage: React.FC = () => {
                             size="small"
                             variant="text"
                             onClick={() => handleDelete(emp.id)}
-                            sx={{ color: govStyles.colors.danger }}
+                            sx={{ color: govStyles.colors.danger, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' } }}
                           >
                             🗑️
                           </Button>

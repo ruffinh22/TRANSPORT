@@ -26,6 +26,8 @@ import {
   FormControl,
   InputLabel,
   Select,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material'
 import {
   Assessment as ReportIcon,
@@ -48,6 +50,10 @@ interface ReportData {
 }
 
 export const ReportsPage: React.FC = () => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+
   const [reportType, setReportType] = useState('monthly')
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<any>(null)
@@ -162,7 +168,7 @@ export const ReportsPage: React.FC = () => {
   }
 
   return (
-    <MainLayout>
+    <MainLayout hideGovernmentHeader={true}>
       <GovPageWrapper maxWidth="xl">
         <GovPageHeader
           title="Rapports et Statistiques"
@@ -180,19 +186,21 @@ export const ReportsPage: React.FC = () => {
 
         {error && <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 3 }}>{error}</Alert>}
 
-        {/* Filtres et Export */}
-        <Paper sx={{ p: 2, mb: 4, ...govStyles.contentCard }}>
-          <Grid container spacing={2} alignItems="flex-end">
+        {/* Filtres et Export - ULTRA RESPONSIVE */}
+        <Paper sx={{ p: { xs: 1.5, sm: 2, md: 2 }, mb: { xs: 2, sm: 3, md: 4 }, ...govStyles.contentCard }}>
+          <Grid container spacing={{ xs: 1.5, sm: 2, md: 2 }} alignItems={{ xs: 'stretch', sm: 'stretch', md: 'flex-end' }}>
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth size="small">
-                <InputLabel>Type de rapport</InputLabel>
+                <InputLabel htmlFor="report-type-select" sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } }}>Type de rapport</InputLabel>
                 <Select
+                  id="report-type-select"
                   label="Type de rapport"
                   value={reportType}
                   onChange={(e) => setReportType(e.target.value)}
+                  sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } }}
                 >
                   {reportTypes.map(rt => (
-                    <option key={rt.value} value={rt.value}>{rt.label}</option>
+                    <MenuItem key={rt.value} value={rt.value}>{rt.label}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -206,6 +214,7 @@ export const ReportsPage: React.FC = () => {
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
+                sx={{ '& .MuiOutlinedInput-root': { fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } } }}
               />
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
@@ -217,17 +226,21 @@ export const ReportsPage: React.FC = () => {
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
+                sx={{ '& .MuiOutlinedInput-root': { fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } } }}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Stack direction="row" spacing={1}>
+            <Grid item xs={12} sm={12} md={3}>
+              <Stack direction={{ xs: 'row', md: 'row' }} spacing={{ xs: 0.5, md: 1 }} sx={{ width: '100%' }}>
                 <Button
                   startIcon={<FileDownloadIcon />}
                   onClick={handleExportPDF}
                   variant="contained"
                   size="small"
+                  fullWidth
                   sx={{
                     backgroundColor: govStyles.colors.danger,
+                    fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.85rem' },
+                    py: { xs: 0.75, md: 1 },
                     '&:hover': { backgroundColor: '#a00d20' },
                   }}
                 >
@@ -238,8 +251,11 @@ export const ReportsPage: React.FC = () => {
                   onClick={handleExportExcel}
                   variant="contained"
                   size="small"
+                  fullWidth
                   sx={{
                     backgroundColor: govStyles.colors.success,
+                    fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.85rem' },
+                    py: { xs: 0.75, md: 1 },
                     '&:hover': { backgroundColor: '#005c45' },
                   }}
                 >
@@ -250,23 +266,23 @@ export const ReportsPage: React.FC = () => {
           </Grid>
         </Paper>
 
-        {/* Graphiques */}
+        {/* Graphiques - RESPONSIVE */}
         {reportType === 'monthly' && (
-          <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid container spacing={{ xs: 1.5, sm: 2, md: 3 }} sx={{ mb: 4 }}>
             <Grid item xs={12} md={8}>
               <Card sx={govStyles.contentCard}>
                 <CardContent>
-                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: govStyles.colors.primary }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: govStyles.colors.primary, fontSize: { xs: '0.95rem', sm: '1.1rem', md: '1.25rem' } }}>
                     📈 Trajets et Revenus (Hebdomadaire)
                   </Typography>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={{ xs: 250, sm: 280, md: 300 }}>
                     <BarChart data={mockTripsData}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="day" />
-                      <YAxis yAxisId="left" />
-                      <YAxis yAxisId="right" orientation="right" />
+                      <XAxis dataKey="day" tick={{ fontSize: { xs: 10, sm: 12, md: 14 } }} />
+                      <YAxis yAxisId="left" tick={{ fontSize: { xs: 10, sm: 12, md: 14 } }} />
+                      <YAxis yAxisId="right" orientation="right" tick={{ fontSize: { xs: 10, sm: 12, md: 14 } }} />
                       <Tooltip formatter={(value: any) => value.toLocaleString('fr-FR')} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '1rem' } }} />
                       <Bar yAxisId="left" dataKey="trips" fill={govStyles.colors.primary} name="Trajets" />
                       <Bar yAxisId="right" dataKey="revenue" fill={govStyles.colors.success} name="Revenus (CFA)" />
                     </BarChart>
@@ -275,14 +291,14 @@ export const ReportsPage: React.FC = () => {
               </Card>
             </Grid>
             <Grid item xs={12} md={4}>
-              <Grid container spacing={2}>
+              <Grid container spacing={{ xs: 1, sm: 1.5, md: 2 }}>
                 <Grid item xs={12}>
                   <Card sx={{ borderLeft: `5px solid ${govStyles.colors.primary}`, ...govStyles.contentCard }}>
-                    <CardContent sx={{ pb: '16px !important' }}>
-                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                    <CardContent sx={{ pb: '16px !important', p: { xs: 1.5, sm: 2, md: 2 } }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' } }}>
                         Trajets
                       </Typography>
-                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.primary }}>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.primary, fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                         1,420
                       </Typography>
                     </CardContent>
@@ -290,11 +306,11 @@ export const ReportsPage: React.FC = () => {
                 </Grid>
                 <Grid item xs={12}>
                   <Card sx={{ borderLeft: `5px solid ${govStyles.colors.success}`, ...govStyles.contentCard }}>
-                    <CardContent sx={{ pb: '16px !important' }}>
-                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                    <CardContent sx={{ pb: '16px !important', p: { xs: 1.5, sm: 2, md: 2 } }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' } }}>
                         Billets
                       </Typography>
-                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.success }}>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.success, fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                         3,250
                       </Typography>
                     </CardContent>
@@ -302,11 +318,11 @@ export const ReportsPage: React.FC = () => {
                 </Grid>
                 <Grid item xs={12}>
                   <Card sx={{ borderLeft: `5px solid ${govStyles.colors.warning}`, ...govStyles.contentCard }}>
-                    <CardContent sx={{ pb: '16px !important' }}>
-                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: '0.85rem' }}>
+                    <CardContent sx={{ pb: '16px !important', p: { xs: 1.5, sm: 2, md: 2 } }}>
+                      <Typography color="textSecondary" gutterBottom sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' } }}>
                         Colis
                       </Typography>
-                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.warning }}>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: govStyles.colors.warning, fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}>
                         4,100
                       </Typography>
                     </CardContent>

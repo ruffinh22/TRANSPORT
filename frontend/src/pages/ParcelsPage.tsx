@@ -25,6 +25,9 @@ import {
   FormControl,
   InputLabel,
   Select,
+  MenuItem,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material'
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import { MainLayout } from '../components/MainLayout'
@@ -46,6 +49,10 @@ interface Parcel {
 }
 
 export const ParcelsPage: React.FC = () => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+
   const [parcels, setParcels] = useState<Parcel[]>([])
   const [loading, setLoading] = useState(false)
   const [openDialog, setOpenDialog] = useState(false)
@@ -179,7 +186,7 @@ export const ParcelsPage: React.FC = () => {
   )
 
   return (
-    <MainLayout>
+    <MainLayout hideGovernmentHeader={true}>
       <GovPageWrapper maxWidth="lg">
         <GovPageHeader
           title="Suivi Colis et Livraisons"
@@ -197,9 +204,9 @@ export const ParcelsPage: React.FC = () => {
 
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-        {/* Filtres */}
-        <Paper sx={{ p: 2, mb: 3, ...govStyles.contentCard }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+        {/* Filtres - ULTRA RESPONSIVE */}
+        <Paper sx={{ p: { xs: 1.5, sm: 2, md: 2 }, mb: { xs: 2, sm: 3, md: 3 }, ...govStyles.contentCard }}>
+          <Stack direction={{ xs: 'column', sm: 'column', md: 'row' }} spacing={{ xs: 1.5, sm: 2, md: 2 }}>
             <TextField
               label="Rechercher (numéro/destination)"
               value={search}
@@ -207,20 +214,27 @@ export const ParcelsPage: React.FC = () => {
               variant="outlined"
               size="small"
               fullWidth
-              sx={{ maxWidth: { md: '350px' } }}
+              sx={{ 
+                maxWidth: { xs: '100%', md: '350px' },
+                '& .MuiOutlinedInput-root': {
+                  fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
+                }
+              }}
             />
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>Statut</InputLabel>
+            <FormControl size="small" sx={{ minWidth: { xs: '100%', md: 200 } }}>
+              <InputLabel htmlFor="status-filter-select" sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } }}>Statut</InputLabel>
               <Select
+                id="status-filter-select"
                 label="Statut"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
+                sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' } }}
               >
-                <option value="all">Tous</option>
-                <option value="pending">En attente</option>
-                <option value="in_transit">En transit</option>
-                <option value="delivered">Livré</option>
-                <option value="cancelled">Annulé</option>
+                <MenuItem value="all">Tous</MenuItem>
+                <MenuItem value="pending">En attente</MenuItem>
+                <MenuItem value="in_transit">En transit</MenuItem>
+                <MenuItem value="delivered">Livré</MenuItem>
+                <MenuItem value="cancelled">Annulé</MenuItem>
               </Select>
             </FormControl>
             <Button
@@ -231,6 +245,7 @@ export const ParcelsPage: React.FC = () => {
                 loadParcels()
               }}
               sx={govStyles.govButton.secondary}
+              fullWidth={isMobile}
             >
               Réinitialiser
             </Button>
@@ -289,22 +304,146 @@ export const ParcelsPage: React.FC = () => {
           </Grid>
         </Grid>
 
-        {/* Tableau */}
+        {/* LAYOUT RESPONSIVE - CARDS MOBILE / TABLE DESKTOP */}
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
             <CircularProgress sx={{ color: govStyles.colors.success }} />
           </Box>
+        ) : isMobile ? (
+          <Box sx={{ width: '100%', px: { xs: 1, sm: 0 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1, sm: 1.5, md: 2 }, margin: '0 auto', maxWidth: { xs: '90%', sm: '100%' } }}>
+              {filteredParcels.length === 0 ? (
+                <Paper sx={{ p: 4, textAlign: 'center', color: '#999' }}>
+                  Aucun colis trouvé
+                </Paper>
+              ) : (
+                filteredParcels.map((parcel) => (
+                  <Card key={parcel.id} sx={{
+                    p: { xs: 1, sm: 1.5, md: 2 },
+                    borderLeft: `4px solid ${getStatusColor(parcel.status)}`,
+                    backgroundColor: '#f9f9f9',
+                    '&:hover': {
+                      boxShadow: '0 4px 8px rgba(0, 122, 94, 0.15)',
+                      backgroundColor: '#fafafa'
+                    }
+                  }}>
+                    <Stack spacing={{ xs: 1, sm: 1.5 }}>
+                      {/* Header */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: { xs: '0.85rem', sm: '0.95rem' }, color: govStyles.colors.success }}>
+                            📦 {parcel.tracking_number}
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.75rem', sm: '0.8rem' }, color: '#666' }}>
+                            {parcel.origin} → {parcel.destination}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={getStatusLabel(parcel.status)}
+                          size="small"
+                          sx={{
+                            backgroundColor: `${getStatusColor(parcel.status)}20`,
+                            color: getStatusColor(parcel.status),
+                            fontWeight: 700,
+                            fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                            height: 'auto',
+                            padding: '2px 8px'
+                          }}
+                        />
+                      </Box>
+
+                      {/* Info Grid 2x2 */}
+                      <Box sx={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: { xs: 1, sm: 1.5 },
+                        backgroundColor: '#fff',
+                        p: { xs: 1, sm: 1.5 },
+                        borderRadius: 1
+                      }}>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, color: '#666' }}>
+                            Destinataire
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.85rem' }, color: '#000', fontWeight: 500 }}>
+                            {parcel.recipient_name}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, color: '#666' }}>
+                            Poids
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.85rem' }, color: '#000', fontWeight: 500 }}>
+                            {parcel.weight} kg
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, color: '#666' }}>
+                            Téléphone
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.85rem' }, color: '#000' }}>
+                            {parcel.recipient_phone}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, fontWeight: 600, color: '#666' }}>
+                            Date
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.85rem' }, color: '#000' }}>
+                            {new Date(parcel.delivery_date).toLocaleDateString('fr-FR')}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Actions */}
+                      <Stack direction="row" spacing={1} sx={{ pt: 1 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleOpenDialog(parcel)}
+                          fullWidth
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            py: { xs: 0.75, sm: 1 },
+                            color: govStyles.colors.success,
+                            borderColor: govStyles.colors.success,
+                            '&:hover': { backgroundColor: 'rgba(0, 122, 94, 0.05)' }
+                          }}
+                        >
+                          ✏️ Éditer
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => handleDelete(parcel.id)}
+                          fullWidth
+                          size="small"
+                          sx={{
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            py: { xs: 0.75, sm: 1 }
+                          }}
+                        >
+                          🗑️ Supprimer
+                        </Button>
+                      </Stack>
+                      </Stack>
+                    </Card>
+                ))
+              )}
+            </Box>
+          </Box>
         ) : (
+          // TABLE DESKTOP RESPONSIVE
           <TableContainer component={Paper} sx={govStyles.contentCard}>
             <Table sx={govStyles.table}>
               <TableHead>
                 <TableRow sx={{ backgroundColor: govStyles.colors.success }}>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Numéro</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Itinéraire</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }}>Destinataire</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="right">Poids</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Statut</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase' }} align="center">Actions</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Numéro</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Itinéraire</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }}>Destinataire</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }} align="right">Poids</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }} align="center">Statut</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 700, textTransform: 'uppercase', fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.85rem' } }} align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -323,32 +462,33 @@ export const ParcelsPage: React.FC = () => {
                         borderLeft: `4px solid ${getStatusColor(parcel.status)}`,
                       }}
                     >
-                      <TableCell sx={{ fontWeight: 600, color: govStyles.colors.primary }}>
+                      <TableCell sx={{ fontWeight: 600, color: govStyles.colors.primary, fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         📦 {parcel.tracking_number}
                       </TableCell>
-                      <TableCell sx={{ fontSize: '0.9rem' }}>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         {parcel.origin} → {parcel.destination}
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                             {parcel.recipient_name}
                           </Typography>
-                          <Typography variant="caption" sx={{ color: '#999' }}>
+                          <Typography variant="caption" sx={{ color: '#999', fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.8rem' } }}>
                             {parcel.recipient_phone}
                           </Typography>
                         </Box>
                       </TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 500 }}>
+                      <TableCell align="right" sx={{ fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         {parcel.weight} kg
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell align="center" sx={{ fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.9rem' } }}>
                         <Chip
                           label={getStatusLabel(parcel.status)}
                           sx={{
                             backgroundColor: `${getStatusColor(parcel.status)}20`,
                             color: getStatusColor(parcel.status),
                             fontWeight: 700,
+                            fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.8rem' }
                           }}
                           size="small"
                         />
@@ -359,7 +499,7 @@ export const ParcelsPage: React.FC = () => {
                             size="small"
                             variant="text"
                             onClick={() => handleOpenDialog(parcel)}
-                            sx={{ color: govStyles.colors.success }}
+                            sx={{ color: govStyles.colors.success, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' } }}
                           >
                             ✏️
                           </Button>
@@ -367,7 +507,7 @@ export const ParcelsPage: React.FC = () => {
                             size="small"
                             variant="text"
                             onClick={() => handleDelete(parcel.id)}
-                            sx={{ color: govStyles.colors.danger }}
+                            sx={{ color: govStyles.colors.danger, fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' } }}
                           >
                             🗑️
                           </Button>

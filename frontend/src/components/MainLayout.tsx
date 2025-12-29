@@ -42,6 +42,7 @@ const DRAWER_WIDTH = 280
 
 interface MainLayoutProps {
   children: React.ReactNode
+  hideGovernmentHeader?: boolean
 }
 
 const menuItems = [
@@ -59,7 +60,7 @@ const settingsItems = [
   { label: 'Paramètres', icon: <SettingsIcon />, path: '/settings' },
 ]
 
-export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+export const MainLayout: React.FC<MainLayoutProps> = ({ children, hideGovernmentHeader = false }) => {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
@@ -92,8 +93,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <CssBaseline />
 
-      {/* Government Header */}
-      <GovernmentHeader language="fr" />
+      {/* Government Header - Desktop Only */}
+      {!hideGovernmentHeader && (
+        <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+          <GovernmentHeader language="fr" />
+        </Box>
+      )}
 
       {/* App Bar */}
       <AppBar
@@ -104,7 +109,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         }}
       >
         <Container maxWidth="lg">
-          <Toolbar disableGutters sx={{ py: 1 }}>
+          <Toolbar disableGutters sx={{ py: { xs: 0.5, md: 1 }, minHeight: { xs: '56px', md: '64px' } }}>
             <IconButton
               color="inherit"
               aria-label="toggle drawer"
@@ -137,7 +142,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               <HomeIcon />
             </IconButton>
 
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 700, letterSpacing: '1px' }}>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 700, letterSpacing: '1px', display: { xs: 'block', md: 'none' } }}>
               TKF - Gestion Transport
             </Typography>
 
@@ -343,7 +348,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       </Box>
 
       {/* Government Footer */}
-      <GovernmentFooter language="fr" />
+      {!hideGovernmentHeader && <GovernmentFooter language="fr" />}
     </Box>
   )
 }

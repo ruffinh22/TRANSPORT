@@ -10,6 +10,7 @@ import {
   Grid,
   useTheme,
   Tab,
+  useMediaQuery,
 } from '@mui/material'
 import { TabContext, TabList, TabPanel } from '@mui/lab'
 import {
@@ -27,7 +28,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useAppSelector } from '../hooks'
 import { MainLayout } from '../components/MainLayout'
-import { AdminDashboard } from './admin/AdminDashboard'
+import { AdminDashboardContent } from './admin/AdminDashboard'
 import { tripService, ticketService, parcelService, paymentService, employeeService, cityService } from '../services'
 
 interface Stats {
@@ -38,6 +39,15 @@ interface Stats {
   revenue: number
   employees: number
   cities: number
+}
+
+// Interface pour les props de DashboardContent
+interface DashboardContentProps {
+  hasPermission: (action: 'view' | 'create' | 'edit' | 'delete', resource: string) => boolean
+  stats: Stats
+  navigate: (path: string) => void
+  GovStatCard: React.FC<any>
+  GovActionButton: React.FC<any>
 }
 
 // Permissions par rôle avec actions CRUD
@@ -109,6 +119,12 @@ export const Dashboard: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth)
   const theme = useTheme()
   const [tabValue, setTabValue] = useState('0')
+  // Fixed import reference for AdminDashboardContent
+  
+  // Media Queries pour responsivité
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+  const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'))
 
   const [stats, setStats] = useState<Stats>({
     trips: 0,
@@ -199,7 +215,7 @@ export const Dashboard: React.FC = () => {
     }
   }
 
-  // Composant Carte Stat Gouvernementale
+  // Composant Carte Stat Gouvernementale - RESPONSIVE
   const GovStatCard = ({
     title,
     value,
@@ -218,7 +234,7 @@ export const Dashboard: React.FC = () => {
         cursor: onClick ? 'pointer' : 'default',
         transition: 'all 0.3s ease',
         border: `2px solid ${color}`,
-        borderRadius: '8px',
+        borderRadius: { xs: '6px', sm: '8px', md: '8px' },
         backgroundColor: '#ffffff',
         boxShadow: '0 2px 8px rgba(0, 61, 102, 0.08)',
         '&:hover': onClick
@@ -230,6 +246,9 @@ export const Dashboard: React.FC = () => {
           : {},
         position: 'relative',
         overflow: 'hidden',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
       }}
       onClick={onClick}
     >
@@ -244,28 +263,33 @@ export const Dashboard: React.FC = () => {
         }}
       />
 
-      <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
-          <Box sx={{ flex: 1 }}>
+      <CardContent sx={{ p: { xs: '12px', sm: '16px', md: '20px' }, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: { xs: 1, md: 2 } }}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography
               variant="body2"
               sx={{
-                fontSize: '0.85rem',
-                fontWeight: 600,
+                fontSize: { xs: '0.6rem', sm: '0.75rem', md: '0.85rem' },
+                fontWeight: 700,
                 color: '#666',
                 textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                mb: 1,
+                letterSpacing: '0.3px',
+                mb: { xs: 0.5, sm: 0.75 },
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
               {title}
             </Typography>
             <Typography
-              variant="h4"
+              variant="h5"
               sx={{
-                fontWeight: 700,
+                fontWeight: 800,
                 color: color,
-                fontSize: { xs: '1.8rem', md: '2.2rem' },
+                fontSize: { xs: '1rem', sm: '1.3rem', md: '1.8rem' },
+                lineHeight: 1.1,
+                wordBreak: 'break-word',
               }}
             >
               {typeof value === 'number' ? value.toLocaleString('fr-FR') : value}
@@ -276,20 +300,22 @@ export const Dashboard: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 56,
-              height: 56,
-              borderRadius: '8px',
-              backgroundColor: `${color}10`,
+              width: { xs: 36, sm: 44, md: 56 },
+              height: { xs: 36, sm: 44, md: 56 },
+              borderRadius: '6px',
+              backgroundColor: `${color}15`,
+              flexShrink: 0,
+              minWidth: { xs: 36, sm: 44, md: 56 },
             }}
           >
-            <Icon sx={{ fontSize: 28, color: color }} />
+            <Icon sx={{ fontSize: { xs: 18, sm: 22, md: 28 }, color: color }} />
           </Box>
         </Box>
       </CardContent>
     </Card>
   )
 
-  // Bouton d'action gouvernemental
+  // Bouton d'action gouvernemental - RESPONSIVE
   const GovActionButton = ({
     label,
     icon: Icon,
@@ -310,17 +336,31 @@ export const Dashboard: React.FC = () => {
         backgroundColor: variant === 'primary' ? '#003D66' : '#E8E8E8',
         color: variant === 'primary' ? '#ffffff' : '#003D66',
         textTransform: 'uppercase',
-        fontWeight: 600,
-        fontSize: '0.875rem',
-        padding: '12px 16px',
+        fontWeight: 700,
+        fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.875rem' },
+        padding: { xs: '8px 8px', sm: '10px 12px', md: '12px 16px' },
         borderRadius: '6px',
         border: `2px solid ${variant === 'primary' ? '#003D66' : '#999'}`,
         transition: 'all 0.3s ease',
+        minHeight: { xs: '32px', sm: '36px', md: '44px' },
+        '& .MuiButton-startIcon': {
+          marginRight: { xs: '3px', sm: '4px', md: '8px' },
+          fontSize: { xs: '14px', sm: '16px', md: '20px' },
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
         '&:hover': {
           backgroundColor: variant === 'primary' ? '#002A47' : '#D3D3D3',
           boxShadow: '0 4px 12px rgba(0, 61, 102, 0.15)',
           transform: 'translateY(-1px)',
         },
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
       }}
     >
       {label}
@@ -330,10 +370,12 @@ export const Dashboard: React.FC = () => {
   if (loading) {
     return (
       <MainLayout>
-        <Container maxWidth="lg" sx={{ py: 8, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 4, sm: 6, md: 8 }, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: { xs: '300px', md: '400px' } }}>
           <Box sx={{ textAlign: 'center' }}>
             <CircularProgress sx={{ color: '#003D66', mb: 2 }} />
-            <Typography color="textSecondary">Chargement du tableau de bord...</Typography>
+            <Typography sx={{ fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1rem' }, color: 'textSecondary' }}>
+              Chargement du tableau de bord...
+            </Typography>
           </Box>
         </Container>
       </MainLayout>
@@ -341,54 +383,101 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <MainLayout>
-      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
-        {/* En-tête gouvernemental */}
-        <Box sx={{ mb: 4, borderBottom: '3px solid #003D66', pb: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
-            <Box sx={{ flex: 1 }}>
+    <MainLayout hideGovernmentHeader={true}>
+      <Container maxWidth="lg" sx={{ py: { xs: 1, sm: 1.5, md: 3 }, px: { xs: 1, sm: 1.5, md: 2 } }}>
+        {/* En-tête gouvernemental - ULTRA RESPONSIVE */}
+        <Box sx={{ mb: { xs: 2.5, sm: 3, md: 4 }, borderBottom: '3px solid #003D66', pb: { xs: 1.5, sm: 2, md: 3 } }}>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'flex-start', 
+              mb: { xs: 1.5, sm: 2, md: 3 },
+              flexDirection: { xs: 'column', sm: 'column', md: 'row' },
+              gap: { xs: 1.5, sm: 2, md: 3 }
+            }}
+          >
+            <Box sx={{ flex: 1, width: '100%' }}>
               <Typography
                 variant="h4"
                 sx={{
-                  fontWeight: 700,
+                  fontWeight: 800,
                   color: '#003D66',
                   mb: 0.5,
-                  fontSize: { xs: '1.5rem', md: '2rem' },
+                  fontSize: { xs: '1.1rem', sm: '1.4rem', md: '2rem' },
+                  lineHeight: 1.2,
+                  wordBreak: 'break-word',
                 }}
               >
-                🏛️ TABLEAU DE BORD TKF
+                🏛️ TKF
               </Typography>
               <Typography
                 variant="body1"
                 sx={{
                   color: '#666',
-                  fontSize: '0.95rem',
+                  fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' },
+                  fontWeight: 500,
+                  lineHeight: 1.4,
                 }}
               >
-                {ROLE_TITLES[userRole as keyof typeof ROLE_TITLES]} • Système de Gestion du Transport
+                {ROLE_TITLES[userRole as keyof typeof ROLE_TITLES]} • Gestion du Transport
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 1, flexDirection: { xs: 'column', sm: 'row' }, width: { xs: '100%', md: 'auto' } }}>
-              <GovActionButton label="Télécharger CSV" icon={DownloadIcon} onClick={() => {}} variant="secondary" />
-              <GovActionButton label="Imprimer" icon={ExcelIcon} onClick={() => {}} />
+            <Box 
+              sx={{ 
+                display: 'flex', 
+                gap: { xs: 0.75, sm: 1 },
+                flexDirection: { xs: 'column-reverse', sm: 'row' },
+                width: { xs: '100%', sm: 'auto' },
+              }}
+            >
+              <GovActionButton label="CSV" icon={DownloadIcon} onClick={() => {}} variant="secondary" />
+              <GovActionButton label="Impr." icon={ExcelIcon} onClick={() => {}} />
             </Box>
           </Box>
           {user && (
-            <Typography variant="body2" sx={{ color: '#007A5E', fontWeight: 500 }}>
-              Bienvenue, <strong>{user.firstName} {user.lastName}</strong> • {ROLE_TITLES[userRole as keyof typeof ROLE_TITLES]} • Connecté depuis le {new Date().toLocaleDateString('fr-FR')}
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: '#007A5E', 
+                fontWeight: 500,
+                fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.9rem' },
+                lineHeight: 1.4,
+                wordBreak: 'break-word',
+              }}
+            >
+              <strong>Bienvenue {user.first_name} {user.last_name}</strong><br />
+              {ROLE_TITLES[userRole as keyof typeof ROLE_TITLES]} • {new Date().toLocaleDateString('fr-FR')}
             </Typography>
           )}
         </Box>
 
-        {/* Onglets pour les admins */}
+        {/* Onglets pour les admins - ULTRA RESPONSIVE */}
         {isAdmin && (
-          <Box sx={{ borderBottom: 3, borderColor: 'divider', mb: 4 }}>
+          <Box sx={{ borderBottom: 3, borderColor: 'divider', mb: { xs: 2, sm: 2.5, md: 4 } }}>
             <TabContext value={tabValue}>
-              <TabList onChange={handleTabChange} aria-label="dashboard tabs">
-                <Tab label="📊 Tableau de Bord" value="0" />
-                <Tab label="🔧 Gestion Système" value="1" />
+              <TabList 
+                onChange={handleTabChange} 
+                aria-label="dashboard tabs"
+                variant={isMobile ? "fullWidth" : "standard"}
+                sx={{
+                  minHeight: { xs: '44px', sm: '48px', md: '56px' },
+                  '& .MuiTab-root': {
+                    fontSize: { xs: '0.65rem', sm: '0.8rem', md: '0.95rem' },
+                    padding: { xs: '6px 8px', sm: '8px 12px', md: '12px 20px' },
+                    minWidth: { xs: 'auto', sm: '120px', md: '160px' },
+                    minHeight: { xs: '44px', sm: '48px', md: '56px' },
+                    fontWeight: 600,
+                  },
+                  '& .MuiTabs-indicator': {
+                    height: { xs: '3px', md: '4px' },
+                  }
+                }}
+              >
+                <Tab label="📊 Tableau" value="0" />
+                <Tab label="🔧 Système" value="1" />
               </TabList>
-              <TabPanel value="0" sx={{ p: 0, pt: 3 }}>
+              <TabPanel value="0" sx={{ p: { xs: 0.75, sm: 1, md: 2 }, pt: { xs: 1.5, sm: 2, md: 3 } }}>
                 <DashboardContent
                   hasPermission={hasPermission}
                   stats={stats}
@@ -397,8 +486,8 @@ export const Dashboard: React.FC = () => {
                   GovActionButton={GovActionButton}
                 />
               </TabPanel>
-              <TabPanel value="1">
-                <AdminDashboard />
+              <TabPanel value="1" sx={{ p: { xs: 0.75, sm: 1, md: 2 } }}>
+                <AdminDashboardContent />
               </TabPanel>
             </TabContext>
           </Box>
@@ -415,23 +504,40 @@ export const Dashboard: React.FC = () => {
           />
         )}
 
-        {/* Pied de page officiel */}
+        {/* Pied de page officiel - ULTRA RESPONSIVE */}
         <Box
           sx={{
-            mt: 6,
-            pt: 3,
+            mt: { xs: 3, sm: 4, md: 6 },
+            pt: { xs: 1.5, sm: 2, md: 3 },
             borderTop: '2px solid #ddd',
             textAlign: 'center',
             backgroundColor: '#f5f5f5',
             borderRadius: '8px',
-            p: 3,
+            p: { xs: 1.5, sm: 2, md: 3 },
           }}
         >
-          <Typography variant="body2" sx={{ color: '#666', fontWeight: 500 }}>
-            🏛️ <strong>TKF - Transporteur Kendrick Faso</strong> | Système de Gestion du Transport
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: '#666', 
+              fontWeight: 600,
+              fontSize: { xs: '0.7rem', sm: '0.85rem', md: '1rem' },
+              lineHeight: 1.4,
+            }}
+          >
+            🏛️ <strong>TKF</strong> | Système de Gestion du Transport
           </Typography>
-          <Typography variant="caption" sx={{ color: '#999', mt: 1 }}>
-            © 2024-2025 • République du Burkina Faso • Tous droits réservés
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              color: '#999', 
+              mt: { xs: 0.5, sm: 0.75 },
+              display: 'block',
+              fontSize: { xs: '0.6rem', sm: '0.7rem', md: '0.8rem' },
+              lineHeight: 1.3,
+            }}
+          >
+            © 2024-2025 • Burkina Faso
           </Typography>
         </Box>
       </Container>
@@ -440,74 +546,86 @@ export const Dashboard: React.FC = () => {
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stats, navigate, GovStatCard, GovActionButton }) => {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+
   return (
     <>
-      {/* PREMIÈRE RANGÉE - Cartes principales TOUJOURS VISIBLES */}
-      <Grid container spacing={2.5} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <GovStatCard
-            title="Colis en Attente"
-            value={stats.parcels}
-            icon={ParcelsIcon}
-            onClick={() => navigate('/parcels')}
-            color="#007A5E"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <GovStatCard
-            title="Tickets Ouverts"
-            value={stats.tickets}
-            icon={TicketsIcon}
-            onClick={() => navigate('/tickets')}
-            color="#CE1126"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <GovStatCard
-            title="Paiements Pendants"
-            value={stats.payments}
-            icon={TrendingIcon}
-            onClick={() => navigate('/payments')}
-            color="#003D66"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <GovStatCard
-            title="Notifications"
-            value="2"
-            icon={DownloadIcon}
-            onClick={() => {}}
-            color="#FFD700"
-          />
-        </Grid>
-      </Grid>
+      {/* PREMIÈRE RANGÉE - Cartes principales ULTRA RESPONSIVE */}
+      <Box 
+        sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+          gap: { xs: 1, sm: 1.5, md: 2.5 },
+          mb: { xs: 2, sm: 2.5, md: 4 }
+        }}
+      >
+        <GovStatCard
+          title="Colis"
+          value={stats.parcels}
+          icon={ParcelsIcon}
+          onClick={() => navigate('/parcels')}
+          color="#007A5E"
+        />
+        <GovStatCard
+          title="Tickets"
+          value={stats.tickets}
+          icon={TicketsIcon}
+          onClick={() => navigate('/tickets')}
+          color="#CE1126"
+        />
+        <GovStatCard
+          title="Paiements"
+          value={stats.payments}
+          icon={TrendingIcon}
+          onClick={() => navigate('/payments')}
+          color="#003D66"
+        />
+        <GovStatCard
+          title="Notif."
+          value="2"
+          icon={DownloadIcon}
+          onClick={() => {}}
+          color="#FFD700"
+        />
+      </Box>
 
-      {/* DEUXIÈME RANGÉE - Trajets et Employés TOUJOURS VISIBLES */}
-      <Grid container spacing={2.5} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={6}>
-          <GovStatCard
-            title="Trajets Actifs"
-            value={stats.trips}
-            icon={TripsIcon}
-            onClick={() => navigate('/trips')}
-            color="#003D66"
-          />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <GovStatCard
-            title="Employés Actifs"
-            value={stats.employees}
-            icon={EmployeesIcon}
-            onClick={() => navigate('/employees')}
-            color="#FFD700"
-          />
-        </Grid>
-      </Grid>
+      {/* DEUXIÈME RANGÉE - Trajets et Employés ULTRA RESPONSIVE */}
+      <Box 
+        sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
+          gap: { xs: 1, sm: 1.5, md: 2.5 },
+          mb: { xs: 2, sm: 2.5, md: 4 }
+        }}
+      >
+        <GovStatCard
+          title="Trajets"
+          value={stats.trips}
+          icon={TripsIcon}
+          onClick={() => navigate('/trips')}
+          color="#003D66"
+        />
+        <GovStatCard
+          title="Employés"
+          value={stats.employees}
+          icon={EmployeesIcon}
+          onClick={() => navigate('/employees')}
+          color="#FFD700"
+        />
+      </Box>
 
-      {/* TROISIÈME RANGÉE - Revenu et Villes TOUJOURS VISIBLES */}
-      <Grid container spacing={2.5} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={6}>
-          <Card
+      {/* TROISIÈME RANGÉE - Revenu et Villes ULTRA RESPONSIVE */}
+      <Box 
+        sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
+          gap: { xs: 1, sm: 1.5, md: 2.5 },
+          mb: { xs: 2, sm: 2.5, md: 4 }
+        }}
+      >
+        <Card
             sx={{
               backgroundColor: '#003D66',
               color: '#ffffff',
@@ -516,6 +634,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stat
               boxShadow: '0 4px 16px rgba(0, 61, 102, 0.2)',
               position: 'relative',
               overflow: 'hidden',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             <Box
@@ -529,138 +650,144 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stat
                 backgroundColor: 'rgba(206, 17, 38, 0.1)',
               }}
             />
-            <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <Box>
+            <CardContent sx={{ p: { xs: '12px', sm: '16px', md: '20px' }, position: 'relative', zIndex: 1, flex: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1.5 }}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Typography
                     variant="body2"
                     sx={{
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
+                      fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.85rem' },
+                      fontWeight: 700,
                       opacity: 0.9,
                       textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
+                      letterSpacing: '0.3px',
+                      mb: { xs: 0.5, sm: 0.75 },
                     }}
                   >
-                    Chiffre d'Affaires Total
+                    Chiffre d'Affaires
                   </Typography>
-                  <Typography variant="h3" sx={{ fontWeight: 700, mt: 1 }}>
-                    {stats.revenue.toLocaleString('fr-FR')} CFA
+                  <Typography 
+                    variant="h4" 
+                    sx={{ 
+                      fontWeight: 800, 
+                      mt: { xs: 0.5, sm: 0.75 },
+                      fontSize: { xs: '1rem', sm: '1.3rem', md: '1.8rem' },
+                      lineHeight: 1.1,
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    {stats.revenue.toLocaleString('fr-FR')}
                   </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.85, mt: 1 }}>
-                    Paiements complétés
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      opacity: 0.85, 
+                      mt: { xs: 0.25, sm: 0.5 },
+                      fontSize: { xs: '0.6rem', sm: '0.7rem', md: '0.85rem' },
+                    }}
+                  >
+                    CFA
                   </Typography>
                 </Box>
-                <TrendingIcon sx={{ fontSize: 40, opacity: 0.6 }} />
+                <TrendingIcon sx={{ fontSize: { xs: 24, sm: 28, md: 40 }, opacity: 0.6, flexShrink: 0 }} />
               </Box>
             </CardContent>
           </Card>
-        </Grid>
 
-        <Grid item xs={12} md={6}>
-          <GovStatCard
-            title="Villes Desservies"
-            value={stats.cities}
-            icon={CitiesIcon}
-            onClick={() => navigate('/cities')}
-            color="#CE1126"
-          />
-        </Grid>
-      </Grid>
+        <GovStatCard
+          title="Villes"
+          value={stats.cities}
+          icon={CitiesIcon}
+          onClick={() => navigate('/cities')}
+          color="#CE1126"
+        />
+      </Box>
 
-      {/* ACTIONS RAPIDES - FILTRÉES par permissions CRUD */}
-      <Box sx={{ mb: 4 }}>
+      {/* ACTIONS RAPIDES - ULTRA RESPONSIVE */}
+      <Box sx={{ mb: { xs: 2, sm: 3, md: 4 } }}>
         <Typography
           variant="h6"
           sx={{
-            fontWeight: 700,
+            fontWeight: 800,
             color: '#003D66',
-            mb: 2,
-            fontSize: '1.1rem',
+            mb: { xs: 1, sm: 1.5, md: 2 },
+            fontSize: { xs: '0.8rem', sm: '0.95rem', md: '1.1rem' },
             textTransform: 'uppercase',
-            letterSpacing: '0.5px',
+            letterSpacing: '0.3px',
           }}
         >
-          📋 Actions Disponibles
+          📋 Actions
         </Typography>
-        <Grid container spacing={2}>
-          {/* Actions Trajets - SEULEMENT si CREATE ou EDIT */}
+        <Box 
+          sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+            gap: { xs: 1, sm: 1.5, md: 2 }
+          }}
+        >
+          {/* Actions Trajets */}
           {(hasPermission('create', 'trips') || hasPermission('edit', 'trips')) && (
-            <Grid item xs={12} sm={6} md={3}>
-              <GovActionButton 
-                label={hasPermission('create', 'trips') ? "➕ Ajouter Trajet" : "✏️ Gérer Trajets"} 
-                icon={ScheduleIcon} 
-                onClick={() => navigate(hasPermission('create', 'trips') ? '/trips?action=create' : '/trips')} 
-              />
-            </Grid>
+            <GovActionButton 
+              label={hasPermission('create', 'trips') ? "➕ Trajet" : "✏️ Trajets"} 
+              icon={ScheduleIcon} 
+              onClick={() => navigate(hasPermission('create', 'trips') ? '/trips?action=create' : '/trips')} 
+            />
           )}
 
-          {/* Actions Tickets - SEULEMENT si CREATE ou EDIT */}
+          {/* Actions Tickets */}
           {(hasPermission('create', 'tickets') || hasPermission('edit', 'tickets')) && (
-            <Grid item xs={12} sm={6} md={3}>
-              <GovActionButton 
-                label={hasPermission('create', 'tickets') ? "➕ Vendre Billet" : "✏️ Gérer Billets"} 
-                icon={TicketsIcon} 
-                onClick={() => navigate(hasPermission('create', 'tickets') ? '/tickets?action=create' : '/tickets')} 
-              />
-            </Grid>
+            <GovActionButton 
+              label={hasPermission('create', 'tickets') ? "➕ Billet" : "✏️ Billets"} 
+              icon={TicketsIcon} 
+              onClick={() => navigate(hasPermission('create', 'tickets') ? '/tickets?action=create' : '/tickets')} 
+            />
           )}
 
-          {/* Actions Colis - SEULEMENT si CREATE ou EDIT */}
+          {/* Actions Colis */}
           {(hasPermission('create', 'parcels') || hasPermission('edit', 'parcels')) && (
-            <Grid item xs={12} sm={6} md={3}>
-              <GovActionButton 
-                label={hasPermission('create', 'parcels') ? "➕ Ajouter Colis" : "✏️ Gérer Colis"} 
-                icon={ParcelsIcon} 
-                onClick={() => navigate(hasPermission('create', 'parcels') ? '/parcels?action=create' : '/parcels')} 
-              />
-            </Grid>
+            <GovActionButton 
+              label={hasPermission('create', 'parcels') ? "➕ Colis" : "✏️ Colis"} 
+              icon={ParcelsIcon} 
+              onClick={() => navigate(hasPermission('create', 'parcels') ? '/parcels?action=create' : '/parcels')} 
+            />
           )}
 
-          {/* Actions Paiements - SEULEMENT si CREATE ou EDIT */}
+          {/* Actions Paiements */}
           {(hasPermission('create', 'payments') || hasPermission('edit', 'payments')) && (
-            <Grid item xs={12} sm={6} md={3}>
-              <GovActionButton 
-                label={hasPermission('create', 'payments') ? "➕ Enregistrer Paiement" : "✏️ Gérer Paiements"} 
-                icon={TrendingIcon} 
-                onClick={() => navigate(hasPermission('create', 'payments') ? '/payments?action=create' : '/payments')} 
-              />
-            </Grid>
+            <GovActionButton 
+              label={hasPermission('create', 'payments') ? "➕ Paiem." : "✏️ Paiements"} 
+              icon={TrendingIcon} 
+              onClick={() => navigate(hasPermission('create', 'payments') ? '/payments?action=create' : '/payments')} 
+            />
           )}
 
-          {/* Actions Employés - SEULEMENT si CREATE ou EDIT */}
+          {/* Actions Employés */}
           {(hasPermission('create', 'employees') || hasPermission('edit', 'employees')) && (
-            <Grid item xs={12} sm={6} md={3}>
-              <GovActionButton 
-                label={hasPermission('create', 'employees') ? "➕ Ajouter Employé" : "✏️ Gérer Employés"} 
-                icon={EmployeesIcon} 
-                onClick={() => navigate(hasPermission('create', 'employees') ? '/employees?action=create' : '/employees')} 
-              />
-            </Grid>
+            <GovActionButton 
+              label={hasPermission('create', 'employees') ? "➕ Emp." : "✏️ Employés"} 
+              icon={EmployeesIcon} 
+              onClick={() => navigate(hasPermission('create', 'employees') ? '/employees?action=create' : '/employees')} 
+            />
           )}
 
-          {/* Actions Rapports - SEULEMENT si CREATE */}
+          {/* Actions Rapports */}
           {hasPermission('create', 'reports') && (
-            <Grid item xs={12} sm={6} md={3}>
-              <GovActionButton 
-                label="📊 Générer Rapport" 
-                icon={ReportsIcon} 
-                onClick={() => navigate('/reports?action=create')} 
-              />
-            </Grid>
+            <GovActionButton 
+              label="📊 Rapport" 
+              icon={ReportsIcon} 
+              onClick={() => navigate('/reports?action=create')} 
+            />
           )}
 
-          {/* Actions Gestion Utilisateurs - SEULEMENT pour ADMIN */}
+          {/* Actions Gestion Utilisateurs */}
           {(hasPermission('create', 'users') || hasPermission('edit', 'users')) && (
-            <Grid item xs={12} sm={6} md={3}>
-              <GovActionButton 
-                label={hasPermission('create', 'users') ? "➕ Nouvel Utilisateur" : "✏️ Gérer Utilisateurs"} 
-                icon={EmployeesIcon} 
-                onClick={() => navigate(hasPermission('create', 'users') ? '/users?action=create' : '/users')} 
-              />
-            </Grid>
+            <GovActionButton 
+              label={hasPermission('create', 'users') ? "➕ User" : "✏️ Users"} 
+              icon={EmployeesIcon} 
+              onClick={() => navigate(hasPermission('create', 'users') ? '/users?action=create' : '/users')} 
+            />
           )}
-        </Grid>
+        </Box>
 
         {/* Message si PAS d'actions disponibles */}
         {!hasPermission('create', 'trips') && 
@@ -676,9 +803,24 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stat
          !hasPermission('create', 'reports') && 
          !hasPermission('create', 'users') && 
          !hasPermission('edit', 'users') && (
-          <Box sx={{ p: 3, backgroundColor: '#f0f0f0', borderRadius: '8px', textAlign: 'center', mt: 2 }}>
-            <Typography variant="body2" sx={{ color: '#666' }}>
-              👁️ Mode lecture seule - Vous pouvez consulter les données mais pas les modifier
+          <Box 
+            sx={{ 
+              p: { xs: 1.5, sm: 2, md: 3 }, 
+              backgroundColor: '#f0f0f0', 
+              borderRadius: '8px', 
+              textAlign: 'center', 
+              mt: { xs: 1.5, sm: 2 }
+            }}
+          >
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: '#666',
+                fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' },
+                lineHeight: 1.4,
+              }}
+            >
+              👁️ Lecture seule
             </Typography>
           </Box>
         )}

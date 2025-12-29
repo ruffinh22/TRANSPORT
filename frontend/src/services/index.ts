@@ -116,6 +116,8 @@ export const paymentService = {
   list: (params?: any) => apiClient.get('/payments/', { params }),
   get: (id: number) => apiClient.get(`/payments/${id}/`),
   create: (data: any) => apiClient.post('/payments/', data),
+  update: (id: number, data: any) => apiClient.put(`/payments/${id}/`, data),
+  delete: (id: number) => apiClient.delete(`/payments/${id}/`),
 }
 
 export const employeeService = {
