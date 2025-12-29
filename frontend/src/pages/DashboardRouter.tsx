@@ -2,10 +2,6 @@ import React from 'react';
 import { Box, Container, Typography, Divider, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { Dashboard } from './Dashboard';
-import AdminDashboard from './admin/AdminDashboard';
-import ComptableDashboard from './comptable/ComptableDashboard';
-import GuichetierDashboard from './guichetier/GuichetierDashboard';
-import ChauffeurDashboard from './chauffeur/ChauffeurDashboard';
 
 export const DashboardRouter: React.FC = () => {
   const navigate = useNavigate();
@@ -17,15 +13,10 @@ export const DashboardRouter: React.FC = () => {
 
   // Determine which dashboard to show based on role priority
   const getDashboard = () => {
-    if (roles.includes('ADMIN')) {
-      // Pour ADMIN: afficher le Dashboard avec les onglets intégrés
+    if (roles && roles.length > 0) {
+      // Tous les utilisateurs (admin et non-admin) utilisent le même Dashboard
+      // qui filtre le contenu selon les permissions
       return <Dashboard />;
-    } else if (roles.includes('COMPTABLE')) {
-      return <ComptableDashboard />;
-    } else if (roles.includes('GUICHETIER')) {
-      return <GuichetierDashboard />;
-    } else if (roles.includes('CHAUFFEUR')) {
-      return <ChauffeurDashboard />;
     } else {
       return <DefaultDashboard />;
     }

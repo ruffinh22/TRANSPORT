@@ -30,7 +30,6 @@ import { useAppSelector } from '../hooks'
 import { MainLayout } from '../components/MainLayout'
 import { AdminDashboardContent } from './admin/AdminDashboard'
 import { tripService, ticketService, parcelService, paymentService, employeeService, cityService } from '../services'
-import { ComptableDashboard, GuichethierDashboard, ChauffeurdashboardContent } from './RoleDashboards'
 
 interface Stats {
   trips: number
@@ -494,13 +493,8 @@ export const Dashboard: React.FC = () => {
           </Box>
         )}
 
-        {/* Contenu pour les non-admins */}
-        {!isAdmin && userRole === 'COMPTABLE' && <ComptableDashboard />}
-        {!isAdmin && userRole === 'GUICHETIER' && <GuichethierDashboard />}
-        {!isAdmin && userRole === 'CHAUFFEUR' && <ChauffeurdashboardContent />}
-        
-        {/* Contenu générique pour autres rôles */}
-        {!isAdmin && !['COMPTABLE', 'GUICHETIER', 'CHAUFFEUR'].includes(userRole) && (
+        {/* Contenu pour les non-admins - MÊME DASHBOARD POUR TOUS */}
+        {!isAdmin && (
           <DashboardContent
             hasPermission={hasPermission}
             stats={stats}
@@ -735,7 +729,14 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stat
         )}
       </Box>
 
-      {/* ACTIONS RAPIDES - ULTRA RESPONSIVE */}
+      {/* ACTIONS RAPIDES - ULTRA RESPONSIVE - SEULEMENT SI L'UTILISATEUR A AU MOINS UNE PERMISSION D'ACTION */}
+      {(hasPermission('create', 'trips') || hasPermission('edit', 'trips') ||
+        hasPermission('create', 'tickets') || hasPermission('edit', 'tickets') ||
+        hasPermission('create', 'parcels') || hasPermission('edit', 'parcels') ||
+        hasPermission('create', 'payments') || hasPermission('edit', 'payments') ||
+        hasPermission('create', 'employees') || hasPermission('edit', 'employees') ||
+        hasPermission('create', 'reports') ||
+        hasPermission('create', 'users') || hasPermission('edit', 'users')) && (
       <Box sx={{ mb: { xs: 2, sm: 3, md: 4 } }}>
         <Typography
           variant="h6"
@@ -820,43 +821,44 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ hasPermission, stat
             />
           )}
         </Box>
+      </Box>
+      )}
 
-        {/* Message si PAS d'actions disponibles */}
-        {!hasPermission('create', 'trips') && 
-         !hasPermission('edit', 'trips') && 
-         !hasPermission('create', 'tickets') && 
-         !hasPermission('edit', 'tickets') && 
-         !hasPermission('create', 'parcels') && 
-         !hasPermission('edit', 'parcels') && 
-         !hasPermission('create', 'payments') && 
-         !hasPermission('edit', 'payments') && 
-         !hasPermission('create', 'employees') && 
-         !hasPermission('edit', 'employees') && 
-         !hasPermission('create', 'reports') && 
-         !hasPermission('create', 'users') && 
-         !hasPermission('edit', 'users') && (
-          <Box 
+      {/* MESSAGE LECTURE SEULE SI PAS D'ACTIONS */}
+      {!hasPermission('create', 'trips') && 
+       !hasPermission('edit', 'trips') && 
+       !hasPermission('create', 'tickets') && 
+       !hasPermission('edit', 'tickets') && 
+       !hasPermission('create', 'parcels') && 
+       !hasPermission('edit', 'parcels') && 
+       !hasPermission('create', 'payments') && 
+       !hasPermission('edit', 'payments') && 
+       !hasPermission('create', 'employees') && 
+       !hasPermission('edit', 'employees') && 
+       !hasPermission('create', 'reports') && 
+       !hasPermission('create', 'users') && 
+       !hasPermission('edit', 'users') && (
+        <Box 
+          sx={{ 
+            p: { xs: 1.5, sm: 2, md: 3 }, 
+            backgroundColor: '#f0f0f0', 
+            borderRadius: '8px', 
+            textAlign: 'center', 
+            mt: { xs: 1.5, sm: 2 }
+          }}
+        >
+          <Typography 
+            variant="body2" 
             sx={{ 
-              p: { xs: 1.5, sm: 2, md: 3 }, 
-              backgroundColor: '#f0f0f0', 
-              borderRadius: '8px', 
-              textAlign: 'center', 
-              mt: { xs: 1.5, sm: 2 }
+              color: '#666',
+              fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' },
+              lineHeight: 1.4,
             }}
           >
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                color: '#666',
-                fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' },
-                lineHeight: 1.4,
-              }}
-            >
-              👁️ Lecture seule
-            </Typography>
-          </Box>
-        )}
-      </Box>
+            👁️ Lecture seule
+          </Typography>
+        </Box>
+      )}
     </>
   )
 }
