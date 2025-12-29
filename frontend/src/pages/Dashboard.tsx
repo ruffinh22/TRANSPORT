@@ -30,6 +30,7 @@ import { useAppSelector } from '../hooks'
 import { MainLayout } from '../components/MainLayout'
 import { AdminDashboardContent } from './admin/AdminDashboard'
 import { tripService, ticketService, parcelService, paymentService, employeeService, cityService } from '../services'
+import { ComptableDashboard, GuichethierDashboard, ChauffeurdashboardContent } from './RoleDashboards'
 
 interface Stats {
   trips: number
@@ -494,7 +495,12 @@ export const Dashboard: React.FC = () => {
         )}
 
         {/* Contenu pour les non-admins */}
-        {!isAdmin && (
+        {!isAdmin && userRole === 'COMPTABLE' && <ComptableDashboard />}
+        {!isAdmin && userRole === 'GUICHETIER' && <GuichethierDashboard />}
+        {!isAdmin && userRole === 'CHAUFFEUR' && <ChauffeurdashboardContent />}
+        
+        {/* Contenu générique pour autres rôles */}
+        {!isAdmin && !['COMPTABLE', 'GUICHETIER', 'CHAUFFEUR'].includes(userRole) && (
           <DashboardContent
             hasPermission={hasPermission}
             stats={stats}
